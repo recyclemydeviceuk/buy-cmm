@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
+  body { @apply bg-white text-ink font-sans text-[15px] leading-[1.65]; }
+  h1, h2, h3, h4 { @apply font-display font-bold tracking-tightest text-ink; }
+  ::selection { @apply bg-brand-100 text-brand-700; }
+  input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
+  input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 9999px; background: #fff; border: 2px solid #0B0C10; box-shadow: 0 2px 6px rgba(0,0,0,.18); cursor: pointer; margin-top: -9px; pointer-events: auto; }
+  input[type='range']::-moz-range-thumb { height: 22px; width: 22px; border-radius: 9999px; background: #fff; border: 2px solid #0B0C10; box-shadow: 0 2px 6px rgba(0,0,0,.18); cursor: pointer; pointer-events: auto; }
+  input[type='range']::-webkit-slider-runnable-track { height: 4px; background: transparent; }
+  input[type='range']::-moz-range-track { height: 4px; background: transparent; }
+}
+
+@layer components {
+  .focus-ring { @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2; }
+  .product-img { @apply object-contain mix-blend-multiply; }
+  .glass { @apply bg-white/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/70 shadow-glass; }
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.2em] text-ink-3; }
+  .serif-accent { @apply font-serif italic font-normal tracking-normal; }
+  .card { @apply rounded-3xl border border-line bg-white; }
+  .pill { @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-ink; }
+  .dot-grid { background-image: radial-gradient(rgba(11,12,16,.09) 1px, transparent 1px); background-size: 22px 22px; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .text-balance { text-wrap: balance; }
+  .mask-fade-x { -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+}
