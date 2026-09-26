@@ -3,12 +3,21 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { AddedToast } from './AddedToast';
+import { ORGANIZATION_LD, WEBSITE_LD } from '../../lib/seo';
 
 /** Height reserved under the fixed floating header. Pages that want to run under it (the home hero) use `-mt-header`. */
 export const HEADER_OFFSET = 'pt-[92px] md:pt-[104px]';
 
 export function Layout() {
   const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (document.head.querySelector('script[data-seo-jsonld="site"]')) return;
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.dataset.seoJsonld = 'site';
+    s.text = JSON.stringify([ORGANIZATION_LD, WEBSITE_LD]);
+    document.head.appendChild(s);
+  }, []);
   useEffect(() => {
     if (hash) {
       // Lazy pages mount after this effect runs, so poll briefly for the target before giving up.

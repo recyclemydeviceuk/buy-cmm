@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Battery, Check, PackageCheck, Search, ShieldCheck, SlidersHorizontal, Smile, Sparkles, X } from 'lucide-react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Button } from '../components/ui/Button';
 import { CONDITIONS, CONDITION_ORDER } from '../lib/format';
 import type { Condition } from '../types';
@@ -41,7 +41,7 @@ const CHECKS = [
 const NEVER = ['Cracked screens or back glass', 'Water damage indicator triggered', 'Reported lost, stolen or on finance', 'Batteries below 80% health', 'Non-genuine screens that fail colour or touch', 'Account locks we cannot remove'];
 
 export default function HowItWorks() {
-  useDocumentTitle('How it works');
+  useSeo({ title: 'How it works: testing, grading and delivery', description: 'How every pre-owned phone is tested on 40 points, graded Excellent, Good or Fair, and delivered next day with a 12-month warranty and 30-day returns.', canonical: '/how-it-works', jsonLd: breadcrumbLd([['Home', '/'], ['How it works', '/how-it-works']]) });
   const [grade, setGrade] = useState<Condition>('excellent');
   const g = GRADE_META[grade];
 
@@ -70,8 +70,8 @@ export default function HowItWorks() {
             ['3', 'honest grades'],
             ['24h', 'order to doorstep'],
             ['12', 'months of warranty'],
-          ].map(([v, l]) => (
-            <div key={l} className="px-5 py-6 first:pl-0 md:px-8">
+          ].map(([v, l], i) => (
+            <div key={l} className={cn('py-6', i % 2 === 0 ? 'pl-0 pr-5' : 'pl-5', 'md:px-8', i === 0 && 'md:pl-0')}>
               <dt className="font-display text-3xl font-bold tracking-tightest md:text-4xl">{v}</dt>
               <dd className="mt-1 text-sm text-ink-3">{l}</dd>
             </div>
@@ -91,16 +91,16 @@ export default function HowItWorks() {
           </div>
           <ol className="lg:col-span-8">
             {STEPS.map(({ icon: Icon, title, body, fact, tint }, i) => (
-              <li key={title} className="group grid grid-cols-[64px_1fr] gap-6 border-t border-line py-8 last:border-b md:grid-cols-[96px_1fr] md:py-10">
-                <span className="serif-accent text-4xl leading-none text-ink-3 transition-colors group-hover:text-brand-600 md:text-5xl">0{i + 1}</span>
-                <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-start">
+              <li key={title} className="group grid grid-cols-[48px_1fr] gap-4 border-t border-line py-7 last:border-b md:grid-cols-[96px_1fr] md:gap-6 md:py-10">
+                <span className="serif-accent text-3xl leading-none text-ink-3 transition-colors group-hover:text-brand-600 md:text-5xl">0{i + 1}</span>
+                <div className="grid grid-cols-[1fr_auto] items-start gap-4 sm:gap-5">
                   <div>
                     <h3 className="font-display text-2xl font-bold">{title}</h3>
                     <p className="mt-2 max-w-md text-ink-3">{body}</p>
                     <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1 text-xs font-semibold text-ink-2"><Sparkles size={12} /> {fact}</span>
                   </div>
-                  <span className={cn('flex h-16 w-16 items-center justify-center rounded-2xl transition-transform group-hover:-rotate-6', tint)}>
-                    <Icon size={26} strokeWidth={1.75} />
+                  <span className={cn('flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:-rotate-6 sm:h-16 sm:w-16', tint)}>
+                    <Icon size={26} strokeWidth={1.75} className="h-5 w-5 sm:h-[26px] sm:w-[26px]" />
                   </span>
                 </div>
               </li>
@@ -126,10 +126,10 @@ export default function HowItWorks() {
           </div>
 
           <div key={grade} className="mx-auto mt-10 grid max-w-5xl gap-4 animate-pop lg:grid-cols-12">
-            <div className={cn('flex items-center justify-center rounded-[32px] p-10 lg:col-span-5', g.tint)}>
-              <img src={g.image} alt="" className="h-72 w-auto product-img" />
+            <div className={cn('flex items-center justify-center rounded-[32px] p-6 lg:col-span-5 lg:p-10', g.tint)}>
+              <img src={g.image} alt="" className="h-48 w-auto product-img lg:h-72" />
             </div>
-            <div className="rounded-[32px] border border-line bg-white p-8 lg:col-span-7 md:p-10">
+            <div className="rounded-[32px] border border-line bg-white p-6 lg:col-span-7 md:p-10">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="eyebrow">Grade {g.letter}</p>
@@ -138,13 +138,13 @@ export default function HowItWorks() {
                 </div>
                 <span className="rounded-full bg-tint-mint px-3 py-1.5 text-xs font-bold text-success">Save {g.saving} vs new</span>
               </div>
-              <dl className="mt-6 grid grid-cols-3 gap-3">
+              <dl className="mt-6 grid grid-cols-3 gap-2 md:gap-3">
                 {[
                   ['Screen', g.screen],
                   ['Body', g.body],
                   ['Battery', g.battery],
                 ].map(([k, v]) => (
-                  <div key={k} className="rounded-2xl bg-cream-2 p-4">
+                  <div key={k} className="rounded-2xl bg-cream-2 p-3 md:p-4">
                     <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">{k}</dt>
                     <dd className="mt-1 text-sm font-semibold leading-snug">{v}</dd>
                   </div>

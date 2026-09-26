@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo, breadcrumbLd } from '../lib/seo';
 import type { Condition, ProductQuery, SortKey } from '../types';
 import { FilterPanel } from '../components/product/FilterPanel';
 import { ProductGrid } from '../components/product/ProductGrid';
@@ -45,7 +45,14 @@ export default function Shop() {
   const [drawer, setDrawer] = useState(false);
 
   const title = query.search ? `Results for “${query.search}”` : query.brand?.length === 1 ? (query.brand[0] === 'Apple' ? 'Shop iPhone' : 'Shop Samsung Galaxy') : query.series?.includes('Galaxy Z') && query.series.length === 1 ? 'Shop foldables' : 'Shop all phones';
-  useDocumentTitle(title);
+  const brandOnly = query.brand?.length === 1 && !query.search && !query.series?.length && !query.network?.length && !query.condition?.length && !query.storage?.length && query.minPrice === undefined && query.maxPrice === undefined && (query.page ?? 1) === 1;
+  useSeo({
+    title,
+    description: query.brand?.[0] === 'Apple' ? 'Pre-owned iPhone 11 to iPhone 18 Pro Max, every storage and network, graded Excellent, Good or Fair. 12-month warranty and free next-day delivery.' : query.brand?.[0] === 'Samsung' ? 'Pre-owned Samsung Galaxy S, Z foldables, A series and Note, tested and graded by hand. 12-month warranty and free next-day delivery.' : 'Browse every pre-owned iPhone and Samsung Galaxy we sell. Filter by price, network, storage and condition. 12-month warranty, free next-day delivery.',
+    canonical: brandOnly ? `/shop?brand=${query.brand![0]}` : '/shop',
+    noindex: !!query.search || (query.page ?? 1) > 1,
+    jsonLd: breadcrumbLd([['Home', '/'], [title, '/shop']]),
+  });
 
   const list = useAsync(() => api.listProducts(query), [key]);
   const facets = useAsync(() => api.getFacets(query), [key]);

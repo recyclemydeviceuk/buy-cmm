@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
+import { useSeo } from '../lib/seo';
 
+/** Back-compat wrapper: pages that only need a title. Prefer `useSeo` with a description. */
 export function useDocumentTitle(title?: string) {
-  useEffect(() => {
-    const base = 'CashMyMobile';
-    document.title = title ? `${title} · ${base}` : `${base} · Buy phones`;
-  }, [title]);
+  useSeo({ title });
 }

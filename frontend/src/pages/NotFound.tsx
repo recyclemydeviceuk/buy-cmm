@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import { useProductSearch } from '../hooks/useProductSearch';
 import { SearchResults } from '../components/product/SearchResults';
 
 export default function NotFound() {
-  useDocumentTitle('Page not found');
+  useSeo({ title: 'Page not found', noindex: true });
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const results = useProductSearch(q);

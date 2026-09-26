@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, ShieldCheck, Truck, RefreshCcw, Check, ShoppingBag } from 'lucide-react';
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo, breadcrumbLd, SITE_URL } from '../lib/seo';
 import { useBasket } from '../store/basket';
 import type { Condition } from '../types';
 import { VariantPicker } from '../components/product/VariantPicker';
@@ -27,7 +27,32 @@ export default function ProductPage() {
   const reviews = useAsync(() => (product.data ? api.getReviews(product.data.id) : Promise.resolve([])), [product.data?.id]);
   const { add } = useBasket();
   const p = product.data;
-  useDocumentTitle(p ? `${p.brand} ${p.name}` : undefined);
+  const inStock = p ? p.variants.filter((v) => v.stock > 0) : [];
+  const maxPrice = inStock.length ? Math.max(...inStock.map((v) => v.price)) : undefined;
+  useSeo({
+    title: p ? `${p.brand === 'Apple' ? '' : 'Samsung '}${p.name} from ${money(p.fromPrice)}` : undefined,
+    description: p ? `Buy a pre-owned ${p.brand === 'Apple' ? 'Apple' : 'Samsung'} ${p.name} from ${money(p.fromPrice)}. ${p.specs.display}, ${p.specs.chip}, ${p.specs.camera}. Choose storage, network and condition. 12-month warranty, free next-day delivery.` : undefined,
+    canonical: p ? `/phones/${p.slug}` : undefined,
+    image: p ? p.image : undefined,
+    type: 'product',
+    jsonLd: p
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: `${p.brand} ${p.name}`,
+            image: [`${SITE_URL}${p.image}`],
+            description: `Pre-owned ${p.brand} ${p.name}, tested on 40 points and graded by hand. ${p.specs.display}, ${p.specs.chip}, ${p.specs.camera}, ${p.specs.battery}.`,
+            brand: { '@type': 'Brand', name: p.brand },
+            sku: p.id,
+            url: `${SITE_URL}/phones/${p.slug}`,
+            aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, reviewCount: p.reviewCount },
+            offers: { '@type': 'AggregateOffer', priceCurrency: 'GBP', lowPrice: p.fromPrice, highPrice: maxPrice ?? p.fromPrice, offerCount: inStock.length, availability: inStock.length ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', itemCondition: 'https://schema.org/RefurbishedCondition', url: `${SITE_URL}/phones/${p.slug}` },
+          },
+          breadcrumbLd([['Home', '/'], [p.brand === 'Apple' ? 'iPhone' : 'Samsung Galaxy', `/shop?brand=${p.brand}`], [p.name, `/phones/${p.slug}`]]),
+        ]
+      : undefined,
+  });
 
   const [selection, setSelection] = useState<{ storage: string; network: string; condition: Condition }>({ storage: '', network: 'Unlocked', condition: 'excellent' });
   const [tab, setTab] = useState<Tab>('specs');

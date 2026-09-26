@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Mail, Search } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } from '../data/site';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Accordion } from '../components/ui/Accordion';
 
 const GROUPS: Array<{ id: string; title: string; blurb: string; items: Array<{ q: string; a: string }> }> = [
@@ -51,7 +51,15 @@ const GROUPS: Array<{ id: string; title: string; blurb: string; items: Array<{ q
 ];
 
 export default function Faq() {
-  useDocumentTitle('Help centre');
+  useSeo({
+    title: 'Help centre: ordering, delivery, warranty and returns',
+    description: 'Answers on ordering, unlocked vs network phones, free next-day delivery, the 12-month warranty and 30-day returns at CashMyMobile.',
+    canonical: '/faq',
+    jsonLd: [
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: GROUPS.flatMap((g) => g.items).map((it) => ({ '@type': 'Question', name: it.q, acceptedAnswer: { '@type': 'Answer', text: it.a } })) },
+      breadcrumbLd([['Home', '/'], ['Help centre', '/faq']]),
+    ],
+  });
   const [q, setQ] = useState('');
   const term = q.trim().toLowerCase();
   const groups = useMemo(

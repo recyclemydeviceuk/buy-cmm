@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Truck, RefreshCcw } from 'lucide-react';
 import { useBasket } from '../store/basket';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import { Button } from '../components/ui/Button';
 import { conditionLabel, money } from '../lib/format';
 
 export default function Basket() {
-  useDocumentTitle('Basket');
+  useSeo({ title: 'Basket', noindex: true });
   const { lines, subtotal, count, setQuantity, remove } = useBasket();
 
   if (!lines.length) {

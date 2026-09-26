@@ -2,7 +2,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { Check, ArrowRight, Truck, MapPin, Mail, Package, Home, PackageSearch, FileText } from 'lucide-react';
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import type { Order } from '../types';
 import { Button } from '../components/ui/Button';
 import { conditionLabel, money } from '../lib/format';
@@ -19,7 +19,7 @@ const TIMELINE = [
 export default function OrderConfirmed() {
   const { orderNumber = '' } = useParams();
   const { state } = useLocation() as { state?: Order };
-  useDocumentTitle('Order confirmed');
+  useSeo({ title: 'Order confirmed', noindex: true });
   const fetched = useAsync(() => (state ? Promise.resolve(state) : api.getOrder(orderNumber)), [orderNumber]);
   const order = state ?? fetched.data;
 

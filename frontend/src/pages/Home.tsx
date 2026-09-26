@@ -1,6 +1,6 @@
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import { Hero } from '../components/home/Hero';
 import { TrustStrip } from '../components/home/TrustStrip';
 import { BrandSplit } from '../components/home/BrandSplit';
@@ -16,7 +16,7 @@ import { BestsellerSlider } from '../components/home/BestsellerSlider';
 import { Section, SectionHeading } from '../components/ui/Section';
 
 export default function Home() {
-  useDocumentTitle();
+  useSeo({ description: 'Certified pre-owned iPhone and Samsung Galaxy phones, tested on 40 points and graded by hand. Up to 60% less than new, 12-month warranty, free next-day UK delivery.', canonical: '/' });
   const featured = useAsync(() => api.getFeatured(), []);
   const newest = useAsync(() => api.listProducts({ sort: 'newest', pageSize: 5 }), []);
 

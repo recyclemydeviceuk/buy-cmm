@@ -4,7 +4,7 @@ import { ChevronLeft, ShieldCheck, Check } from 'lucide-react';
 import { PayPalButton } from '../components/checkout/PayPalButton';
 import { api } from '../api';
 import { useBasket } from '../store/basket';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import type { Address, DeliveryMethod } from '../types';
 import { Field } from '../components/ui/Field';
 import { conditionLabel, money } from '../lib/format';
@@ -29,7 +29,7 @@ function Step({ n, title, sub, children }: { n: number; title: string; sub: stri
 }
 
 export default function Checkout() {
-  useDocumentTitle('Checkout');
+  useSeo({ title: 'Checkout', noindex: true });
   const { lines, subtotal, clear } = useBasket();
   const navigate = useNavigate();
   const [address, setAddress] = useState<Address>(EMPTY);

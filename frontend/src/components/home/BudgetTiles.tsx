@@ -15,21 +15,23 @@ export function BudgetTiles() {
       <div className="grid divide-y divide-line md:grid-cols-4 md:divide-x md:divide-y-0">
         {STEPS.map((s, i) => {
           return (
-            <Link key={s.price + i} to={s.to} className="group flex flex-col p-7 transition-colors hover:bg-cream-2 md:p-8">
-              <div className="flex items-start justify-between">
-                <span className="eyebrow">Range 0{i + 1}</span>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink transition-all group-hover:border-ink group-hover:bg-ink group-hover:text-white">
-                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
+            <Link key={s.price + i} to={s.to} className="group grid grid-cols-[1fr_auto] items-center gap-4 p-5 transition-colors hover:bg-cream-2 md:flex md:flex-col md:items-stretch md:gap-0 md:p-8">
+              <div className="min-w-0">
+                <div className="flex items-start justify-between">
+                  <span className="eyebrow">Range 0{i + 1}</span>
+                  <span className="hidden h-9 w-9 items-center justify-center rounded-full border border-line text-ink transition-all group-hover:border-ink group-hover:bg-ink group-hover:text-white md:flex">
+                    <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-ink-3 md:mt-6">{s.label}</p>
+                <p className="serif-accent text-4xl leading-none text-ink md:text-[3.25rem]">{s.price}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4">
+                  {s.chips.map((c) => (
+                    <span key={c} className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold text-ink-2">{c}</span>
+                  ))}
+                </div>
               </div>
-              <p className="mt-6 text-sm text-ink-3">{s.label}</p>
-              <p className="serif-accent text-5xl leading-none text-ink md:text-[3.25rem]">{s.price}</p>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {s.chips.map((c) => (
-                  <span key={c} className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold text-ink-2">{c}</span>
-                ))}
-              </div>
-              <div className={`mx-auto mt-8 flex aspect-square w-full max-w-[220px] items-center justify-center rounded-full transition-transform duration-500 group-hover:-translate-y-1 group-hover:shadow-card ${s.tint}`}>
+              <div className={`flex aspect-square w-24 shrink-0 items-center justify-center rounded-full transition-transform duration-500 group-hover:-translate-y-1 group-hover:shadow-card md:mx-auto md:mt-8 md:w-full md:max-w-[220px] ${s.tint}`}>
                 <img src={s.image} alt="" loading="lazy" className="h-[74%] w-[74%] product-img transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-3" />
               </div>
             </Link>

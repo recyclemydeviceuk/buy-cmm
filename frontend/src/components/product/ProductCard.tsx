@@ -11,8 +11,8 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const storages = product.storages;
   const storageRange = storages.length > 1 ? `${storages[0]} – ${storages[storages.length - 1]}` : storages[0];
   return (
-    <Link to={`/phones/${product.slug}`} className="group flex flex-col rounded-3xl border border-line bg-white p-3 transition-all duration-300 hover:-translate-y-1 hover:border-ink-4 hover:shadow-card focus-ring">
-      <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-2xl bg-cream p-6">
+    <Link to={`/phones/${product.slug}`} className="group flex flex-col rounded-2xl border border-line bg-white p-2 transition-all duration-300 hover:-translate-y-1 hover:border-ink-4 hover:shadow-card focus-ring sm:rounded-3xl sm:p-3">
+      <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl bg-cream p-4 sm:rounded-2xl sm:p-6">
         <img
           src={product.image}
           alt={`${product.brand} ${product.name}`}
@@ -20,7 +20,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           decoding="async"
           className="h-full w-full product-img transition-transform duration-500 ease-out group-hover:scale-[1.06]"
         />
-        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3">
           {off > 0 && <Badge tone="dark">{money(off)} off new</Badge>}
           {isNew && <Badge tone="brand">New in</Badge>}
         </div>
@@ -28,21 +28,21 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           <ArrowUpRight size={16} />
         </span>
       </div>
-      <div className="flex flex-1 flex-col p-3 pb-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">{product.brand} · {product.releaseYear}</p>
-        <h3 className="mt-1.5 font-display text-[17px] font-bold leading-snug">{product.name}</h3>
-        <p className="mt-1 text-xs text-ink-3">{storageRange} · Unlocked or network</p>
+      <div className="flex flex-1 flex-col p-2 pb-1 sm:p-3 sm:pb-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3 sm:text-[11px] sm:tracking-[0.16em]">{product.brand} · {product.releaseYear}</p>
+        <h3 className="mt-1 font-display text-[15px] font-bold leading-snug sm:mt-1.5 sm:text-[17px]">{product.name}</h3>
+        <p className="mt-1 text-[11px] text-ink-3 sm:text-xs">{storageRange}<span className="hidden sm:inline"> · Unlocked or network</span></p>
         <div className="mt-2 flex items-center gap-1.5">
           <Stars value={product.rating} size={12} />
           <span className="text-xs font-semibold">{product.rating.toFixed(1)}</span>
           <span className="text-xs text-ink-3">({product.reviewCount.toLocaleString('en-GB')})</span>
         </div>
-        <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-0.5 pt-3 sm:pt-5">
           <div>
             <p className="text-[11px] font-medium text-ink-3">Starting at</p>
-            <p className="font-display text-[22px] font-bold leading-none tracking-tighter">{money(product.fromPrice)}</p>
+            <p className="font-display text-lg font-bold leading-none tracking-tighter sm:text-[22px]">{money(product.fromPrice)}</p>
           </div>
-          {product.rrp > product.fromPrice && <p className="pb-0.5 text-xs text-ink-3"><span className="line-through">{money(product.rrp)}</span> new</p>}
+          {product.rrp > product.fromPrice && <p className="pb-0.5 text-[11px] text-ink-3 sm:text-xs"><span className="line-through">{money(product.rrp)}</span> new</p>}
         </div>
       </div>
     </Link>

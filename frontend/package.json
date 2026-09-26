@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 3003",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/generate-sitemap.mjs && tsc -b && vite build",
     "preview": "vite preview --port 3003",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "sitemap": "node scripts/generate-sitemap.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /basket
+Disallow: /checkout
+Disallow: /order/
+Disallow: /track
+
+Sitemap: https://buy.cashmymobile.co.uk/sitemap.xml

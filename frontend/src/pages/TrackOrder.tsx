@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, Home, Package, PackageSearch, Truck } from 'lucide-react';
 import { api } from '../api';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useSeo } from '../lib/seo';
 import type { Order } from '../types';
 import { Field } from '../components/ui/Field';
 import { Button } from '../components/ui/Button';
@@ -18,7 +18,7 @@ const STAGES: Array<{ key: Order['status'] | 'packing'; icon: typeof Check; labe
 const STAGE_INDEX: Record<Order['status'], number> = { confirmed: 0, dispatched: 2, delivered: 3, cancelled: -1 };
 
 export default function TrackOrder() {
-  useDocumentTitle('Track your order');
+  useSeo({ title: 'Track your order', noindex: true });
   const [sp] = useSearchParams();
   const [orderNumber, setOrderNumber] = useState(sp.get('order') ?? '');
   const [email, setEmail] = useState('');
