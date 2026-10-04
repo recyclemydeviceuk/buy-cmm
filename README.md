@@ -8,8 +8,8 @@ and price. It is deliberately separate from the sell site
 ```
 BuyUpon/
 ├── frontend/        Customer storefront (Vite + React 18 + TypeScript + Tailwind)  ← built
-├── admin/           Admin panel (same stack, shares frontend/src types + catalogue) ← built
-├── backend/         BuyUpon API (Node 20 + TypeScript + Express + MongoDB)          ← built
+├── admin/           Admin panel → github.com/recyclemydeviceuk/buy-admin (own repo, ignored here)
+├── backend/         BuyUpon API → github.com/recyclemydeviceuk/buycmm-backend (own repo, ignored here)
 └── API_CONTRACT.md  Endpoints the storefront and admin expect from the backend (implemented)
 ```
 

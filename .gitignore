@@ -6,3 +6,5 @@ dist
 
 # The API lives in its own repository: recyclemydeviceuk/buycmm-backend
 backend/
+# The admin panel lives in its own repository: recyclemydeviceuk/buy-admin
+admin/
