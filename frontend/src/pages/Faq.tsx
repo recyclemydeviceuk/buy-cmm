@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useSiteContact } from '../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Mail, Search } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
-import { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } from '../data/site';
 import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Accordion } from '../components/ui/Accordion';
 
@@ -51,6 +51,7 @@ const GROUPS: Array<{ id: string; title: string; blurb: string; items: Array<{ q
 ];
 
 export default function Faq() {
+  const { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
   useSeo({
     title: 'Help centre: ordering, delivery, warranty and returns',
     description: 'Answers on ordering, unlocked vs network phones, free next-day delivery, the 12-month warranty and 30-day returns at CashMyMobile.',

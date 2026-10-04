@@ -13,6 +13,7 @@ import { Badge } from '../components/ui/Badge';
 import { Stars } from '../components/ui/Rating';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Section, SectionHeading } from '../components/ui/Section';
+import { ReviewForm } from '../components/product/ReviewForm';
 import { Accordion } from '../components/ui/Accordion';
 import { CONDITIONS, money, savingsPct } from '../lib/format';
 import { cn } from '../lib/cn';
@@ -46,7 +47,7 @@ export default function ProductPage() {
             brand: { '@type': 'Brand', name: p.brand },
             sku: p.id,
             url: `${SITE_URL}/phones/${p.slug}`,
-            aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, reviewCount: p.reviewCount },
+            ...(p.reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, reviewCount: p.reviewCount } } : {}),
             offers: { '@type': 'AggregateOffer', priceCurrency: 'GBP', lowPrice: p.fromPrice, highPrice: maxPrice ?? p.fromPrice, offerCount: inStock.length, availability: inStock.length ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', itemCondition: 'https://schema.org/RefurbishedCondition', url: `${SITE_URL}/phones/${p.slug}` },
           },
           breadcrumbLd([['Home', '/'], [p.brand === 'Apple' ? 'iPhone' : 'Samsung Galaxy', `/shop?brand=${p.brand}`], [p.name, `/phones/${p.slug}`]]),
@@ -133,7 +134,7 @@ export default function ProductPage() {
           <p className="eyebrow">{p.brand} · {p.releaseYear}</p>
           <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h1 className="text-3xl md:text-[2.4rem] md:leading-[1.05]">{p.name}</h1>
-            <span className="flex items-center gap-1.5 text-sm"><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3">({p.reviewCount.toLocaleString('en-GB')})</span></span>
+            <span className="flex items-center gap-1.5 text-sm">{p.reviewCount > 0 ? <><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3">({p.reviewCount.toLocaleString('en-GB')})</span></> : <span className="text-ink-3">No reviews yet</span>}</span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-baseline gap-x-3 border-y border-line py-4">
@@ -202,18 +203,23 @@ export default function ProductPage() {
                 />
               )}
               {tab === 'reviews' && (
-                <ul className="divide-y divide-line-2">
-                  {(reviews.data ?? []).map((r) => (
-                    <li key={r.id} className="py-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="text-sm font-bold">{r.title}</p>
-                        <Stars value={r.rating} size={12} />
-                      </div>
-                      <p className="mt-1 text-sm text-ink-3">{r.body}</p>
-                      <p className="mt-1.5 text-xs text-ink-2"><span className="font-semibold">{r.author}</span> · {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · <span className="text-success">Verified purchase</span></p>
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <ul className="divide-y divide-line-2">
+                    {(reviews.data ?? []).map((r) => (
+                      <li key={r.id} className="py-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm font-bold">{r.title}</p>
+                          <Stars value={r.rating} size={12} />
+                        </div>
+                        <p className="mt-1 text-sm text-ink-3">{r.body}</p>
+                        <p className="mt-1.5 text-xs text-ink-2"><span className="font-semibold">{r.author}</span> · {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{r.verified && <> · <span className="text-success">Verified purchase</span></>}</p>
+                        {r.reply && <p className="mt-2 rounded-2xl bg-cream px-4 py-3 text-sm text-ink-2"><span className="block text-[11px] font-bold uppercase tracking-wider text-ink-3">Reply from CashMyMobile</span>{r.reply}</p>}
+                      </li>
+                    ))}
+                    {(reviews.data ?? []).length === 0 && <li className="py-6 text-sm text-ink-3">No reviews for this model yet. Bought one? Be the first.</li>}
+                  </ul>
+                  <div className="mt-4"><ReviewForm productId={p.id} productName={p.name} /></div>
+                </div>
               )}
             </div>
           </div>

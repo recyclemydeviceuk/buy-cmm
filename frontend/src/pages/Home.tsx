@@ -58,10 +58,7 @@ export default function Home() {
         <TradeInBanner />
       </Section>
 
-      <Section className="overflow-hidden">
-        <SectionHeading eyebrow="Reviews" title={<>What <span className="serif-accent text-ink-3">12,400 customers</span> say</>} align="center" />
-        <Testimonials />
-      </Section>
+      <Testimonials />
 
       <Section>
         <FaqTeaser />

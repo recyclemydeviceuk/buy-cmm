@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Truck, RefreshCcw } from 'lucide-react';
 import { useBasket } from '../store/basket';
+import { useStoreConfig } from '../store/catalog';
 import { useSeo } from '../lib/seo';
 import { Button } from '../components/ui/Button';
 import { conditionLabel, money } from '../lib/format';
 
 export default function Basket() {
+  const config = useStoreConfig();
+  const cheapest = config.delivery.filter((d) => d.enabled).reduce<number | null>((min, d) => (min === null || d.fee < min ? d.fee : min), null);
+  const fastest = config.delivery.filter((d) => d.enabled).sort((a, b) => a.etaDays - b.etaDays)[0];
   useSeo({ title: 'Basket', noindex: true });
   const { lines, subtotal, count, setQuantity, remove } = useBasket();
 
@@ -63,7 +67,7 @@ export default function Basket() {
             <h2 className="font-display text-lg font-bold">Summary</h2>
             <dl className="mt-5 space-y-3 text-sm">
               <div className="flex justify-between"><dt className="text-ink-3">Subtotal</dt><dd className="font-semibold">{money(subtotal)}</dd></div>
-              <div className="flex justify-between"><dt className="text-ink-3">Delivery</dt><dd className="font-semibold text-success">Free</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-3">Delivery</dt><dd className="font-semibold text-success">{cheapest ? `from ${money(cheapest)}` : 'Free'}</dd></div>
             </dl>
             <div className="mt-5 flex items-baseline justify-between border-t border-ink/10 pt-5">
               <span className="font-display font-bold">Total</span>
@@ -75,9 +79,9 @@ export default function Basket() {
             </Button>
             <Link to="/shop" className="mt-3 block text-center text-sm font-semibold text-ink-2 hover:text-ink">Continue shopping</Link>
             <ul className="mt-6 space-y-2 border-t border-ink/10 pt-5 text-xs text-ink-2">
-              <li className="flex items-center gap-2"><Truck size={14} /> Free tracked next-day delivery</li>
-              <li className="flex items-center gap-2"><ShieldCheck size={14} /> 12-month warranty</li>
-              <li className="flex items-center gap-2"><RefreshCcw size={14} /> 30-day returns</li>
+              <li className="flex items-center gap-2"><Truck size={14} /> {cheapest ? 'Tracked' : 'Free tracked'} {fastest ? fastest.label.toLowerCase() : 'delivery'}</li>
+              <li className="flex items-center gap-2"><ShieldCheck size={14} /> {config.store.warrantyMonths}-month warranty</li>
+              <li className="flex items-center gap-2"><RefreshCcw size={14} /> {config.store.returnsDays}-day returns</li>
             </ul>
           </div>
         </aside>

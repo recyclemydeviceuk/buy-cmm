@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import type { Product } from '../../types';
+import type { MenuProduct } from '../../types';
 import { money } from '../../lib/format';
 import { cn } from '../../lib/cn';
 
 interface Props {
   query: string;
-  results: Product[];
+  results: MenuProduct[];
   onPick?: () => void;
   onSubmitAll?: () => void;
   className?: string;

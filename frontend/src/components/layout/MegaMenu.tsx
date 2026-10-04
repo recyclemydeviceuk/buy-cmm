@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronRight } from 'lucide-react';
-import { BRAND_MENUS, QUICK_LINKS } from '../../data/menu';
+import { QUICK_LINKS } from '../../data/menu';
+import { useBrandMenus } from '../../store/catalog';
 import { money } from '../../lib/format';
 import { cn } from '../../lib/cn';
 
 /** Desktop "Buy a phone" panel: brand switch, range links, most popular models, one featured device. */
 export function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
+  const BRAND_MENUS = useBrandMenus();
   const [brandKey, setBrandKey] = useState<'Apple' | 'Samsung'>('Apple');
-  const brand = BRAND_MENUS.find((b) => b.key === brandKey)!;
+  const brand = BRAND_MENUS.find((b) => b.key === brandKey) ?? BRAND_MENUS[0];
+  if (!brand) return <div className="p-8 text-sm text-ink-3">Loading the catalogue…</div>;
   const tile = brandKey === 'Apple' ? 'bg-tint-peach' : 'bg-tint-sky';
   const popular = brand.groups.flatMap((g) => g.items).sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 5);
   const row = 'flex h-11 items-center justify-between rounded-xl px-3 text-[15px] text-ink-2 transition-colors hover:bg-cream hover:text-ink';

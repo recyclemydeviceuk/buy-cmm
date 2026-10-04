@@ -1,8 +1,5 @@
 import { httpApi } from './http/adapter';
-import { mockApi } from './mock/adapter';
 import type { StorefrontApi } from './types';
 
-const useMock = (import.meta.env.VITE_USE_MOCK ?? 'true') === 'true';
-
-export const api: StorefrontApi = useMock ? mockApi : httpApi;
-export const IS_MOCK = useMock;
+/** The storefront talks only to the BuyUpon backend (VITE_API_BASE_URL). */
+export const api: StorefrontApi = httpApi;

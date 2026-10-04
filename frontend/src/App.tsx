@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { BasketProvider } from './store/basket';
+import { CatalogProvider } from './store/catalog';
 import { Layout } from './components/layout/Layout';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import Home from './pages/Home';
 
 const Shop = lazy(() => import('./pages/Shop'));
@@ -17,8 +19,10 @@ const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <CatalogProvider>
       <BasketProvider>
+        <ErrorBoundary>
         <Suspense fallback={<div className="container py-24 text-center text-ink-3">Loading…</div>}>
           <Routes>
             <Route element={<Layout />}>
@@ -37,7 +41,9 @@ export default function App() {
             </Route>
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </BasketProvider>
+      </CatalogProvider>
     </BrowserRouter>
   );
 }

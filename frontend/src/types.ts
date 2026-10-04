@@ -113,7 +113,7 @@ export interface CheckoutRequest {
 export interface Order {
   orderNumber: string;
   createdAt: string;
-  status: 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
+  status: 'confirmed' | 'packing' | 'dispatched' | 'delivered' | 'cancelled' | 'returned';
   lines: BasketLine[];
   subtotal: number;
   deliveryFee: number;
@@ -126,10 +126,43 @@ export interface Order {
 export interface Review {
   id: string;
   productId: string;
+  productName?: string;
   author: string;
   rating: number;
   title: string;
   body: string;
   date: string;
   verified: boolean;
+  reply?: string;
+}
+
+export interface ReviewInput {
+  author: string;
+  email: string;
+  orderNumber?: string;
+  rating: number;
+  title: string;
+  body: string;
+}
+
+/** Slim product used by the mega menu, instant search and showcase tiles. */
+export type MenuProduct = Pick<Product, 'id' | 'slug' | 'brand' | 'name' | 'series' | 'image' | 'fromPrice' | 'rrp' | 'releaseYear' | 'rating' | 'reviewCount' | 'storages'>;
+
+export interface DeliveryOption {
+  id: DeliveryMethod;
+  label: string;
+  description: string;
+  fee: number;
+  etaDays: number;
+  cutoff: string;
+  enabled: boolean;
+}
+
+/** Store configuration managed in the admin panel. */
+export interface StoreConfig {
+  store: { name: string; supportEmail: string; whatsapp: string; hours: string; warrantyMonths: number; returnsDays: number };
+  delivery: DeliveryOption[];
+  networks: string[];
+  conditions: Array<{ key: Condition; label: string; short: string; blurb: string; minBattery: number }>;
+  paypal: { mode: 'sandbox' | 'live'; clientId: string };
 }

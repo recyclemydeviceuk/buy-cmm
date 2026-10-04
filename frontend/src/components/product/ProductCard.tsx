@@ -33,9 +33,15 @@ export function ProductCard({ product, priority = false }: { product: Product; p
         <h3 className="mt-1 font-display text-[15px] font-bold leading-snug sm:mt-1.5 sm:text-[17px]">{product.name}</h3>
         <p className="mt-1 text-[11px] text-ink-3 sm:text-xs">{storageRange}<span className="hidden sm:inline"> · Unlocked or network</span></p>
         <div className="mt-2 flex items-center gap-1.5">
-          <Stars value={product.rating} size={12} />
-          <span className="text-xs font-semibold">{product.rating.toFixed(1)}</span>
-          <span className="text-xs text-ink-3">({product.reviewCount.toLocaleString('en-GB')})</span>
+          {product.reviewCount > 0 ? (
+            <>
+              <Stars value={product.rating} size={12} />
+              <span className="text-xs font-semibold">{product.rating.toFixed(1)}</span>
+              <span className="text-xs text-ink-3">({product.reviewCount.toLocaleString('en-GB')})</span>
+            </>
+          ) : (
+            <span className="text-xs text-ink-3">Tested & graded · no reviews yet</span>
+          )}
         </div>
         <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-0.5 pt-3 sm:pt-5">
           <div>

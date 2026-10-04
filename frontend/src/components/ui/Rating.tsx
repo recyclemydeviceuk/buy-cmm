@@ -12,6 +12,7 @@ export function Stars({ value, size = 14, className }: { value: number; size?: n
 }
 
 export function Rating({ value, count, size = 14, className }: { value: number; count?: number; size?: number; className?: string }) {
+  if (count === 0) return <span className={cn('text-xs text-ink-3', className)}>No reviews yet</span>;
   return (
     <div className={cn('flex items-center gap-1.5', className)} aria-label={`Rated ${value} out of 5`}>
       <Stars value={value} size={size} />

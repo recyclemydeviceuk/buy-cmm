@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
+import { useSiteContact } from '../../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { api } from '../../api';
 import { WhatsAppIcon } from '../ui/WhatsAppIcon';
-import { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../data/site';
 
 const COLS = [
   { title: 'Shop', links: [['iPhone', '/shop?brand=Apple'], ['Samsung Galaxy', '/shop?brand=Samsung'], ['Foldables', '/shop?series=Galaxy%20Z'], ['Under £250', '/shop?maxPrice=250'], ['Newest models', '/shop?sort=newest']] },
@@ -12,6 +12,7 @@ const COLS = [
 ];
 
 export function Footer() {
+  const { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   async function submit(e: FormEvent) {

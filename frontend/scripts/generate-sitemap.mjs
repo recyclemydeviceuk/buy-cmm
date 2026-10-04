@@ -1,13 +1,22 @@
-// Builds public/sitemap.xml from the catalogue so every product page is discoverable.
-import { readFileSync, writeFileSync } from 'node:fs';
+// Builds public/sitemap.xml. Product URLs come from the backend (VITE_API_BASE_URL); when it is unreachable only the
+// static pages are written so the build never fails.
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const SITE = (process.env.VITE_SITE_URL ?? 'https://buy.cashmymobile.co.uk').replace(/\/$/, '');
-const catalog = readFileSync(join(root, 'src/data/catalog.ts'), 'utf8');
-const slugs = [...catalog.matchAll(/"slug":\s*"([^"]+)"/g)].map((m) => m[1]);
+const API = (process.env.VITE_API_BASE_URL ?? 'http://localhost:8010').replace(/\/$/, '');
 const today = new Date().toISOString().slice(0, 10);
+
+let slugs = [];
+try {
+  const res = await fetch(`${API}/api/buy/products/menu`, { signal: AbortSignal.timeout(8000) });
+  if (res.ok) slugs = (await res.json()).map((p) => p.slug);
+  else console.warn(`sitemap: API responded ${res.status}; writing static pages only`);
+} catch (e) {
+  console.warn(`sitemap: could not reach ${API} (${e.message}); writing static pages only`);
+}
 
 const staticPages = [
   ['/', '1.0', 'daily'],

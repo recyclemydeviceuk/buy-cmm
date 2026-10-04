@@ -4,13 +4,15 @@ import { ArrowRight, ArrowUpRight, ChevronDown, Menu, MessageCircle, Search, Sho
 import { useBasket } from '../../store/basket';
 import { cn } from '../../lib/cn';
 import { MegaMenu } from './MegaMenu';
-import { BRAND_MENUS, QUICK_LINKS } from '../../data/menu';
+import { QUICK_LINKS } from '../../data/menu';
+import { useBrandMenus } from '../../store/catalog';
 import { useProductSearch } from '../../hooks/useProductSearch';
 import { SearchResults } from '../product/SearchResults';
 
 type Panel = 'menu' | 'search' | null;
 
 export function Header() {
+  const BRAND_MENUS = useBrandMenus();
   const { count } = useBasket();
   const [panel, setPanel] = useState<Panel>(null);
   const [drawer, setDrawer] = useState(false);

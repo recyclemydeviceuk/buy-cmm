@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
+import { useSiteContact } from '../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, Check, Clock, Mail } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
-import { SUPPORT_EMAIL, SUPPORT_HOURS, WHATSAPP_DISPLAY, WHATSAPP_URL } from '../data/site';
 import { api } from '../api';
 import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Field, Select, TextArea } from '../components/ui/Field';
@@ -11,6 +11,7 @@ import { Button } from '../components/ui/Button';
 const TOPICS = ['Order question', 'Warranty claim', 'Return or refund', 'Trade-in', 'Something else'];
 
 export default function Contact() {
+  const { SUPPORT_EMAIL, SUPPORT_HOURS, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
   useSeo({ title: 'Get in touch', description: 'Contact CashMyMobile by WhatsApp, email or the contact form. Order questions, warranty claims and returns answered within one working day.', canonical: '/contact', jsonLd: breadcrumbLd([['Home', '/'], ['Get in touch', '/contact']]) });
   const [form, setForm] = useState({ name: '', email: '', topic: TOPICS[0], order: '', message: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -9,13 +9,14 @@ import { Button } from '../components/ui/Button';
 import { conditionLabel, money } from '../lib/format';
 import { cn } from '../lib/cn';
 
-const STAGES: Array<{ key: Order['status'] | 'packing'; icon: typeof Check; label: string; sub: string }> = [
+const STAGES: Array<{ key: Order['status']; icon: typeof Check; label: string; sub: string }> = [
   { key: 'confirmed', icon: Check, label: 'Confirmed', sub: 'Payment received' },
   { key: 'packing', icon: Package, label: 'Packing', sub: 'Final checks and boxing' },
   { key: 'dispatched', icon: Truck, label: 'Dispatched', sub: 'With the courier' },
   { key: 'delivered', icon: Home, label: 'Delivered', sub: 'Signed for' },
 ];
-const STAGE_INDEX: Record<Order['status'], number> = { confirmed: 0, dispatched: 2, delivered: 3, cancelled: -1 };
+const STAGE_INDEX: Record<Order['status'], number> = { confirmed: 0, packing: 1, dispatched: 2, delivered: 3, cancelled: -1, returned: -1 };
+const CLOSED_LABEL: Partial<Record<Order['status'], string>> = { cancelled: 'Cancelled', returned: 'Returned' };
 
 export default function TrackOrder() {
   useSeo({ title: 'Track your order', noindex: true });
@@ -72,13 +73,13 @@ export default function TrackOrder() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="eyebrow">Order {order.orderNumber}</p>
-                    <p className="mt-1 font-display text-2xl font-bold">{order.status === 'cancelled' ? 'Cancelled' : order.status === 'delivered' ? 'Delivered' : `Arriving ${eta}`}</p>
+                    <p className="mt-1 font-display text-2xl font-bold">{CLOSED_LABEL[order.status] ?? (order.status === 'delivered' ? 'Delivered' : `Arriving ${eta}`)}</p>
                     <p className="mt-1 text-sm text-ink-3">{order.delivery === 'next-day' ? 'Next-day tracked, signature required' : 'Standard tracked'} · to {order.customer.postcode}</p>
                   </div>
-                  <span className={cn('rounded-full px-3 py-1.5 text-xs font-bold', order.status === 'cancelled' ? 'bg-brand-50 text-brand-700' : 'bg-tint-mint text-success')}>{order.status === 'cancelled' ? 'Cancelled' : 'On track'}</span>
+                  <span className={cn('rounded-full px-3 py-1.5 text-xs font-bold', CLOSED_LABEL[order.status] ? 'bg-brand-50 text-brand-700' : 'bg-tint-mint text-success')}>{CLOSED_LABEL[order.status] ?? 'On track'}</span>
                 </div>
 
-                {order.status !== 'cancelled' && (
+                {!CLOSED_LABEL[order.status] && (
                   <ol className="mt-8 grid grid-cols-4 gap-2">
                     {STAGES.map(({ icon: Icon, label, sub }, i) => {
                       const done = i <= stage;

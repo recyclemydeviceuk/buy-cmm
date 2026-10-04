@@ -1,5 +1,4 @@
-import { CATALOG } from './catalog';
-import type { Product } from '../types';
+import type { MenuProduct } from '../types';
 
 export interface MenuItem {
   name: string;
@@ -11,7 +10,7 @@ export interface MenuItem {
 }
 export interface MenuGroup {
   title: string;
-  to: string; // "view all" link for the group
+  to: string;
   items: MenuItem[];
 }
 export interface BrandMenu {
@@ -24,54 +23,66 @@ export interface BrandMenu {
   featured: { title: string; blurb: string; slug: string; image: string; fromPrice: number };
 }
 
-const toItem = (p: Product): MenuItem => ({ name: p.name, slug: p.slug, image: p.image, fromPrice: p.fromPrice, releaseYear: p.releaseYear, reviewCount: p.reviewCount });
-const byNewest = (a: Product, b: Product) => b.releaseYear - a.releaseYear || b.rrp - a.rrp;
-const apple = CATALOG.filter((p) => p.brand === 'Apple').sort(byNewest);
-const samsung = CATALOG.filter((p) => p.brand === 'Samsung').sort(byNewest);
+const toItem = (p: MenuProduct): MenuItem => ({ name: p.name, slug: p.slug, image: p.image, fromPrice: p.fromPrice, releaseYear: p.releaseYear, reviewCount: p.reviewCount });
+const byNewest = (a: MenuProduct, b: MenuProduct) => b.releaseYear - a.releaseYear || b.rrp - a.rrp;
 
-/** iPhone generation number from the model name ("iPhone 16 Pro" → 16). Air / 17e map to their own year. */
-function iphoneGen(p: Product): number {
+function iphoneGen(p: MenuProduct): number {
   const m = p.name.match(/iPhone (\d+)/);
   if (m) return Number(m[1]);
   return p.releaseYear >= 2025 ? 17 : 0;
 }
-function galaxyGen(p: Product): number {
+function galaxyGen(p: MenuProduct): number {
   const m = p.name.match(/Galaxy S(\d+)/);
   return m ? Number(m[1]) : 0;
 }
+const pick = (list: MenuProduct[], fn: (p: MenuProduct) => boolean) => list.filter(fn).map(toItem);
+const star = (list: MenuProduct[]) => [...list].sort((a, b) => b.reviewCount * b.rating - a.reviewCount * a.rating || byNewest(a, b))[0];
 
-const pick = (list: Product[], fn: (p: Product) => boolean) => list.filter(fn).map(toItem);
-
-export const BRAND_MENUS: BrandMenu[] = [
-  {
-    key: 'Apple',
-    label: 'iPhone',
-    tagline: `From £${Math.min(...apple.map((p) => p.fromPrice))}`,
-    to: '/shop?brand=Apple',
-    image: '/phones/apple-iphone-16-pro.webp',
-    groups: [
-      { title: 'iPhone 18 & 17', to: '/shop?brand=Apple&sort=newest', items: pick(apple, (p) => iphoneGen(p) >= 17) },
-      { title: 'iPhone 16 & 15', to: '/shop?brand=Apple&minPrice=300&maxPrice=560', items: pick(apple, (p) => [16, 15].includes(iphoneGen(p))) },
-      { title: 'iPhone 14 & 13', to: '/shop?brand=Apple&minPrice=170&maxPrice=345', items: pick(apple, (p) => [14, 13].includes(iphoneGen(p))) },
-      { title: 'iPhone 12 & 11', to: '/shop?brand=Apple&maxPrice=215', items: pick(apple, (p) => [12, 11].includes(iphoneGen(p))) },
-    ],
-    featured: { title: 'iPhone 16 Pro', blurb: 'Titanium, 5x zoom, Excellent grade.', slug: 'apple-iphone-16-pro', image: '/phones/apple-iphone-16-pro.webp', fromPrice: apple.find((p) => p.slug === 'apple-iphone-16-pro')?.fromPrice ?? 0 },
-  },
-  {
-    key: 'Samsung',
-    label: 'Samsung Galaxy',
-    tagline: `From £${Math.min(...samsung.map((p) => p.fromPrice))}`,
-    to: '/shop?brand=Samsung',
-    image: '/phones/samsung-galaxy-s25-ultra.jpg',
-    groups: [
-      { title: 'Galaxy S26 to S24', to: '/shop?brand=Samsung&series=Galaxy%20S&sort=newest', items: pick(samsung, (p) => p.series === 'Galaxy S' && galaxyGen(p) >= 24) },
-      { title: 'Galaxy S23 to S20', to: '/shop?brand=Samsung&series=Galaxy%20S&maxPrice=290', items: pick(samsung, (p) => p.series === 'Galaxy S' && galaxyGen(p) < 24) },
-      { title: 'Galaxy Z foldables', to: '/shop?brand=Samsung&series=Galaxy%20Z', items: pick(samsung, (p) => p.series === 'Galaxy Z') },
-      { title: 'Galaxy A & Note', to: '/shop?brand=Samsung&series=Galaxy%20A&series=Galaxy%20Note', items: pick(samsung, (p) => p.series === 'Galaxy A' || p.series === 'Galaxy Note') },
-    ],
-    featured: { title: 'Galaxy S24 Ultra', blurb: '200MP camera, S Pen, titanium frame.', slug: 'samsung-galaxy-s24-ultra', image: '/phones/samsung-galaxy-s24-ultra.webp', fromPrice: samsung.find((p) => p.slug === 'samsung-galaxy-s24-ultra')?.fromPrice ?? 0 },
-  },
-];
+/** Builds the "Buy a phone" menus from the live catalogue. Groups with no models are dropped. */
+export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
+  const apple = products.filter((p) => p.brand === 'Apple').sort(byNewest);
+  const samsung = products.filter((p) => p.brand === 'Samsung').sort(byNewest);
+  const menus: BrandMenu[] = [];
+  if (apple.length) {
+    const top = star(apple);
+    const gens = apple.map(iphoneGen);
+    const newest = Math.max(...gens);
+    menus.push({
+      key: 'Apple',
+      label: 'iPhone',
+      tagline: `From £${Math.min(...apple.map((p) => p.fromPrice))}`,
+      to: '/shop?brand=Apple',
+      image: top.image,
+      groups: [
+        { title: `iPhone ${newest} & ${newest - 1}`, to: '/shop?brand=Apple&sort=newest', items: pick(apple, (p) => iphoneGen(p) >= newest - 1) },
+        { title: `iPhone ${newest - 2} & ${newest - 3}`, to: `/shop?brand=Apple&search=iPhone%20${newest - 2}`, items: pick(apple, (p) => [newest - 2, newest - 3].includes(iphoneGen(p))) },
+        { title: `iPhone ${newest - 4} & ${newest - 5}`, to: `/shop?brand=Apple&search=iPhone%20${newest - 4}`, items: pick(apple, (p) => [newest - 4, newest - 5].includes(iphoneGen(p))) },
+        { title: `iPhone ${newest - 6} and earlier`, to: '/shop?brand=Apple&sort=price-asc', items: pick(apple, (p) => iphoneGen(p) <= newest - 6) },
+      ].filter((g) => g.items.length),
+      featured: { title: top.name, blurb: `${top.series} · ${top.releaseYear} · all grades`, slug: top.slug, image: top.image, fromPrice: top.fromPrice },
+    });
+  }
+  if (samsung.length) {
+    const top = star(samsung);
+    const sGens = samsung.filter((p) => p.series === 'Galaxy S').map(galaxyGen);
+    const newest = sGens.length ? Math.max(...sGens) : 0;
+    menus.push({
+      key: 'Samsung',
+      label: 'Samsung Galaxy',
+      tagline: `From £${Math.min(...samsung.map((p) => p.fromPrice))}`,
+      to: '/shop?brand=Samsung',
+      image: top.image,
+      groups: [
+        { title: `Galaxy S${newest} to S${newest - 2}`, to: '/shop?brand=Samsung&series=Galaxy%20S&sort=newest', items: pick(samsung, (p) => p.series === 'Galaxy S' && galaxyGen(p) >= newest - 2) },
+        { title: `Galaxy S${newest - 3} and earlier`, to: '/shop?brand=Samsung&series=Galaxy%20S&sort=price-asc', items: pick(samsung, (p) => p.series === 'Galaxy S' && galaxyGen(p) < newest - 2) },
+        { title: 'Galaxy Z foldables', to: '/shop?brand=Samsung&series=Galaxy%20Z', items: pick(samsung, (p) => p.series === 'Galaxy Z') },
+        { title: 'Galaxy A & Note', to: '/shop?brand=Samsung&series=Galaxy%20A&series=Galaxy%20Note', items: pick(samsung, (p) => p.series === 'Galaxy A' || p.series === 'Galaxy Note') },
+      ].filter((g) => g.items.length),
+      featured: { title: top.name, blurb: `${top.series} · ${top.releaseYear} · all grades`, slug: top.slug, image: top.image, fromPrice: top.fromPrice },
+    });
+  }
+  return menus;
+}
 
 export const QUICK_LINKS: Array<{ label: string; to: string }> = [
   { label: 'All phones', to: '/shop' },

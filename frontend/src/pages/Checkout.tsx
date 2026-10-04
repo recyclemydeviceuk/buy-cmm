@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { ChevronLeft, ShieldCheck, Check } from 'lucide-react';
 import { PayPalButton } from '../components/checkout/PayPalButton';
 import { api } from '../api';
 import { useBasket } from '../store/basket';
+import { useStoreConfig } from '../store/catalog';
 import { useSeo } from '../lib/seo';
 import type { Address, DeliveryMethod } from '../types';
 import { Field } from '../components/ui/Field';
@@ -32,8 +33,16 @@ export default function Checkout() {
   useSeo({ title: 'Checkout', noindex: true });
   const { lines, subtotal, clear } = useBasket();
   const navigate = useNavigate();
+  const config = useStoreConfig();
+  const options = config.delivery.filter((d) => d.enabled);
   const [address, setAddress] = useState<Address>(EMPTY);
-  const [delivery, setDelivery] = useState<DeliveryMethod>('next-day');
+  const [delivery, setDelivery] = useState<DeliveryMethod>(options[0]?.id ?? 'next-day');
+  useEffect(() => {
+    if (options.length && !options.some((o) => o.id === delivery)) setDelivery(options[0].id);
+  }, [options, delivery]);
+  const option = options.find((o) => o.id === delivery);
+  const deliveryFee = option?.fee ?? 0;
+  const total = subtotal + deliveryFee;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -106,7 +115,7 @@ export default function Checkout() {
             </div>
           </Step>
 
-          <Step n={2} title="Delivery" sub="Free and tracked, whichever you pick.">
+          <Step n={2} title="Delivery" sub={options.every((o) => o.fee === 0) ? 'Free and tracked, whichever you pick.' : 'Tracked delivery. Pick the speed that suits you.'}>
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Address line 1" name="line1" autoComplete="address-line1" className="sm:col-span-2" value={address.line1} onChange={set('line1')} error={errors.line1} />
               <Field label="Address line 2 (optional)" name="line2" autoComplete="address-line2" className="sm:col-span-2" value={address.line2} onChange={set('line2')} />
@@ -116,18 +125,13 @@ export default function Checkout() {
             <fieldset className="mt-6">
               <legend className="sr-only">Delivery option</legend>
               <div className="grid gap-3 sm:grid-cols-2">
-                {(
-                  [
-                    { id: 'next-day', title: 'Next-day tracked', body: 'Order by 3pm, arrives tomorrow. Signature required.' },
-                    { id: 'standard', title: 'Standard tracked', body: 'Arrives in 2 to 3 working days.' },
-                  ] as Array<{ id: DeliveryMethod; title: string; body: string }>
-                ).map((o) => (
+                {options.map((o) => (
                   <label key={o.id} className={cn('flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all', delivery === o.id ? 'border-ink ring-1 ring-ink' : 'border-line hover:border-ink')}>
                     <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border', delivery === o.id ? 'border-ink bg-ink text-white' : 'border-ink/30')}>{delivery === o.id && <Check size={12} strokeWidth={3} />}</span>
                     <input type="radio" name="delivery" value={o.id} checked={delivery === o.id} onChange={() => setDelivery(o.id)} className="sr-only" />
                     <span className="flex-1">
-                      <span className="flex justify-between text-sm font-semibold">{o.title} <span className="text-success">Free</span></span>
-                      <span className="mt-0.5 block text-xs text-ink-3">{o.body}</span>
+                      <span className="flex justify-between text-sm font-semibold">{o.label} {o.fee ? <span>{money(o.fee)}</span> : <span className="text-success">Free</span>}</span>
+                      <span className="mt-0.5 block text-xs text-ink-3">{o.description}</span>
                     </span>
                   </label>
                 ))}
@@ -174,15 +178,15 @@ export default function Checkout() {
             </ul>
             <div className="space-y-2 border-t border-white/10 px-7 py-5 text-sm">
               <div className="flex justify-between"><span className="text-white/60">Subtotal</span><span>{money(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-white/60">Delivery</span><span className="text-tint-mint">Free</span></div>
-              <div className="flex items-baseline justify-between border-t border-white/10 pt-3"><span className="font-display font-bold">Total</span><span className="font-display text-2xl font-bold tracking-tighter">{money(subtotal)}</span></div>
+              <div className="flex justify-between"><span className="text-white/60">Delivery{option ? ` · ${option.label}` : ''}</span>{deliveryFee ? <span>{money(deliveryFee)}</span> : <span className="text-tint-mint">Free</span>}</div>
+              <div className="flex items-baseline justify-between border-t border-white/10 pt-3"><span className="font-display font-bold">Total</span><span className="font-display text-2xl font-bold tracking-tighter">{money(total)}</span></div>
             </div>
             <div className="px-7 pb-7">
               {serverError && <p className="mb-4 rounded-2xl bg-brand-600/20 p-3 text-sm font-semibold text-brand-200">{serverError}</p>}
               <div className="rounded-2xl bg-white p-3">
-                <PayPalButton amount={subtotal} disabled={busy} validate={validate} onApproved={onApproved} onError={(m) => { setServerError(m); setBusy(false); }} />
+                <PayPalButton amount={total} disabled={busy} validate={validate} onApproved={onApproved} onError={(m) => { setServerError(m); setBusy(false); }} />
               </div>
-              <p className="mt-4 flex items-start gap-2 text-[11px] text-white/50"><ShieldCheck size={13} className="mt-0.5 shrink-0" /> By paying you agree to our terms. 30-day returns and 12-month warranty apply.</p>
+              <p className="mt-4 flex items-start gap-2 text-[11px] text-white/50"><ShieldCheck size={13} className="mt-0.5 shrink-0" /> By paying you agree to our terms. {config.store.returnsDays}-day returns and {config.store.warrantyMonths}-month warranty apply.</p>
             </div>
           </div>
         </aside>
