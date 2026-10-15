@@ -108,11 +108,16 @@ export interface Address {
 
 export type DeliveryMethod = 'standard' | 'next-day';
 
-export interface CheckoutRequest {
+/** Step 1 of checkout: the server prices this basket and opens a PayPal order for it. */
+export interface PaymentRequest {
   lines: Array<Pick<BasketLine, 'productId' | 'storage' | 'colour' | 'condition' | 'quantity'>>;
   customer: Address;
   delivery: DeliveryMethod;
-  paymentToken: string;
+}
+
+/** Step 2: after the shopper approves in PayPal, the server captures that order and creates ours. */
+export interface CheckoutRequest {
+  paypalOrderId: string;
 }
 
 export interface Order {
@@ -174,5 +179,6 @@ export interface StoreConfig {
   store: { name: string; supportEmail: string; hours: string; warrantyMonths: number; returnsDays: number };
   delivery: DeliveryOption[];
   conditions: Array<{ key: Condition; label: string; short: string; blurb: string; minBattery: number; images: GradePhoto[] }>;
-  paypal: { mode: 'sandbox' | 'live'; clientId: string };
+  /** `enabled` is false when the server has no PayPal credentials, so no payment can be taken. */
+  paypal: { mode: 'sandbox' | 'live'; clientId: string; enabled?: boolean };
 }

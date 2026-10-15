@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
-import { ChevronLeft, ShieldCheck, Check } from 'lucide-react';
-import { PayPalButton } from '../components/checkout/PayPalButton';
+import { ChevronLeft, ShieldCheck, Check, Loader2 } from 'lucide-react';
+import { PayPalButton, PaymentDeclined } from '../components/checkout/PayPalButton';
+import type { ApiError } from '../api/http/adapter';
 import { api } from '../api';
 import { useBasket } from '../store/basket';
 import { useStoreConfig } from '../store/catalog';
@@ -71,18 +72,34 @@ export default function Checkout() {
     return true;
   }
 
+  /** Step 1: our server prices the basket and opens a PayPal order for exactly that amount. */
+  async function createOrder() {
+    setServerError(null);
+    const { paypalOrderId } = await api.createPayPalOrder({
+      lines: lines.map((l) => ({ productId: l.productId, storage: l.storage, colour: l.colour, condition: l.condition, quantity: l.quantity })),
+      customer: { ...address, line2: address.line2?.trim() || undefined, postcode: address.postcode.toUpperCase().trim() },
+      delivery,
+    });
+    return paypalOrderId;
+  }
+
+  /** Step 2: the shopper approved in PayPal; our server reserves the stock, captures the payment and creates the order. */
   async function onApproved(paypalOrderId: string) {
     setBusy(true);
     setServerError(null);
-    // The PayPal order ID is the payment token; the backend captures it server-side.
-    const order = await api.checkout({
-      lines: lines.map((l) => ({ productId: l.productId, storage: l.storage, colour: l.colour, condition: l.condition, quantity: l.quantity })),
-      customer: { ...address, postcode: address.postcode.toUpperCase().trim() },
-      delivery,
-      paymentToken: paypalOrderId,
-    });
-    clear();
-    navigate(`/order/${order.orderNumber}`, { replace: true, state: order });
+    try {
+      const order = await api.checkout({ paypalOrderId });
+      clear();
+      navigate(`/order/${order.orderNumber}`, { replace: true, state: order });
+    } catch (e) {
+      setBusy(false);
+      const err = e as ApiError;
+      if ((err.details as { issue?: string } | undefined)?.issue === 'INSTRUMENT_DECLINED') {
+        setServerError('Your payment method was declined. Choose another card or bank in PayPal.');
+        throw new PaymentDeclined(err.message);
+      }
+      setServerError(err.message || 'We could not complete your payment. You have not been charged.');
+    }
   }
 
   const count = lines.reduce((n, l) => n + l.quantity, 0);
@@ -185,7 +202,15 @@ export default function Checkout() {
             <div className="px-7 pb-7">
               {serverError && <p className="mb-4 rounded-2xl bg-brand-600/20 p-3 text-sm font-semibold text-brand-200">{serverError}</p>}
               <div className="rounded-2xl bg-white p-3">
-                <PayPalButton amount={total} disabled={busy} validate={validate} onApproved={onApproved} onError={(m) => { setServerError(m); setBusy(false); }} />
+                {busy && <p className="mb-2 flex items-center justify-center gap-2 text-sm font-semibold text-ink"><Loader2 size={15} className="animate-spin" /> Confirming your payment…</p>}
+                <PayPalButton
+                  disabled={busy}
+                  validate={validate}
+                  createOrder={createOrder}
+                  onApproved={onApproved}
+                  onError={(m) => { setServerError(m); setBusy(false); }}
+                  onCancel={() => setServerError('Payment cancelled. You have not been charged; you can try again whenever you are ready.')}
+                />
               </div>
               <p className="mt-4 flex items-start gap-2 text-[11px] text-white/50"><ShieldCheck size={13} className="mt-0.5 shrink-0" /> By paying you agree to our terms. {config.store.returnsDays}-day returns and {config.store.warrantyMonths}-month warranty apply.</p>
             </div>

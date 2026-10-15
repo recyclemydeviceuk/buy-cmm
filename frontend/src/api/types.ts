@@ -1,4 +1,4 @@
-import type { CheckoutRequest, Facets, MenuProduct, Order, Paged, Product, ProductQuery, Review, ReviewInput, StoreConfig } from '../types';
+import type { CheckoutRequest, PaymentRequest, Facets, MenuProduct, Order, Paged, Product, ProductQuery, Review, ReviewInput, StoreConfig } from '../types';
 
 /** Every data source the storefront can talk to implements this. */
 export interface StorefrontApi {
@@ -12,6 +12,7 @@ export interface StorefrontApi {
   getRecentReviews(limit?: number): Promise<{ items: Review[]; total: number; average: number }>;
   getMenuProducts(): Promise<MenuProduct[]>;
   getConfig(): Promise<StoreConfig>;
+  createPayPalOrder(req: PaymentRequest): Promise<{ paypalOrderId: string }>;
   checkout(req: CheckoutRequest): Promise<Order>;
   getOrder(orderNumber: string): Promise<Order | null>;
   subscribe(email: string): Promise<{ ok: true }>;
