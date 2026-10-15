@@ -50,7 +50,7 @@ export function TradeInBanner() {
             <span className="rounded-full bg-tint-mint px-2.5 py-1 text-[11px] font-bold text-success">Valid 14 days</span>
           </div>
           <div className="mt-5 flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-cream">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl">
               <img src="/phones/apple-iphone-13.webp" alt="" className="h-12 w-12 product-img" />
             </span>
             <div>

@@ -166,7 +166,7 @@ export default function Checkout() {
             <ul className="divide-y divide-white/10 px-7">
               {lines.map((l) => (
                 <li key={l.lineId} className="flex items-center gap-4 py-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white p-1.5">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1.5">
                     <img src={l.image} alt="" className="h-full w-full product-img" />
                   </div>
                   <div className="min-w-0 flex-1">

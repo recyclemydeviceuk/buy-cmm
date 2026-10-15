@@ -12,7 +12,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const storageRange = storages.length > 1 ? `${storages[0]} – ${storages[storages.length - 1]}` : storages[0];
   return (
     <Link to={`/phones/${product.slug}`} className="group flex flex-col rounded-2xl border border-line bg-white p-2 transition-all duration-300 hover:-translate-y-1 hover:border-ink-4 hover:shadow-card focus-ring sm:rounded-3xl sm:p-3">
-      <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl bg-cream p-4 sm:rounded-2xl sm:p-6">
+      <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl p-4 sm:rounded-2xl sm:p-6">
         <img
           src={product.image}
           alt={`${product.brand} ${product.name}`}

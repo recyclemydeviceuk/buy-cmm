@@ -33,7 +33,7 @@ export function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
                 onClick={() => setBrandKey(b.key)}
                 className={cn('flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all focus-ring', active ? 'bg-white shadow-card' : 'hover:bg-white/70')}
               >
-                <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', active ? (b.key === 'Apple' ? 'bg-tint-peach' : 'bg-tint-sky') : 'bg-white')}>
+                <span className={'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl'}>
                   <img src={b.image} alt="" className="h-9 w-9 product-img" />
                 </span>
                 <span className="min-w-0 flex-1">

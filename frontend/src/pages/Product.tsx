@@ -113,8 +113,8 @@ export default function ProductPage() {
   const soldOut = inStock.length === 0;
   const colourPhoto = p.colours.find((c) => c.name === selection.colour)?.image;
   const image = colourPhoto || p.image;
-  // A colour's own photo sits on neutral cream so a white or silver phone is not read as the tile's tint.
-  const tint = colourPhoto ? 'bg-cream' : p.brand === 'Apple' ? 'bg-tint-peach' : 'bg-tint-sky';
+  // Photos are transparent cut-outs and sit on the page itself, with no tinted panel behind them.
+  const tint = '';
   const photos = gradePhotos[selection.condition] ?? [];
   const showGrade = view === 'grade' && photos.length > 0;
   const choose = (next: Selection, changed: keyof Selection) => {

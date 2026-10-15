@@ -228,7 +228,7 @@ export function Header() {
               {BRAND_MENUS.map((b) => (
                 <details key={b.key} className="group border-b border-line">
                   <summary className="flex cursor-pointer list-none items-center gap-3 py-3.5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cream">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl">
                       <img src={b.image} alt="" className="h-8 w-8 product-img" />
                     </span>
                     <span className="flex-1">

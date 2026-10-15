@@ -25,7 +25,7 @@ export function BrandSplit() {
                 Shop {b.key === 'Apple' ? 'iPhone' : 'Samsung'} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
               </span>
             </div>
-            <img src={b.featured.image} alt={b.featured.title} loading="lazy" className={`absolute bottom-0 right-0 h-[64%] w-auto max-w-[46%] object-contain object-right-bottom transition-transform duration-700 group-hover:scale-105 group-hover:-rotate-2 md:right-2 md:h-[92%] md:max-w-[48%] ${b.key === 'Apple' ? 'rounded-2xl' : 'product-img'}`} />
+            <img src={b.featured.image} alt={b.featured.title} loading="lazy" className={`absolute bottom-0 right-0 h-[64%] w-auto max-w-[46%] object-contain object-right-bottom transition-transform duration-700 group-hover:scale-105 group-hover:-rotate-2 md:right-2 md:h-[92%] md:max-w-[48%] product-img`} />
           </Link>
         );
       })}

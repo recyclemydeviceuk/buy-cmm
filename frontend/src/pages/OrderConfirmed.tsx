@@ -67,7 +67,7 @@ export default function OrderConfirmed() {
             <ul className="mt-3 divide-y divide-line">
               {order.lines.map((l) => (
                 <li key={l.lineId} className="flex items-center gap-4 py-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-cream p-2">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-2">
                     <img src={l.image} alt="" className="h-full w-full product-img" />
                   </div>
                   <div className="min-w-0 flex-1">

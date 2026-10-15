@@ -38,7 +38,7 @@ export default function Basket() {
         <ul className="divide-y divide-line lg:col-span-8">
           {lines.map((l) => (
             <li key={l.lineId} className="grid grid-cols-[88px_1fr] gap-5 py-6 md:grid-cols-[112px_1fr_auto] md:items-center md:gap-8">
-              <Link to={`/phones/${l.slug}`} className="flex aspect-[4/5] items-center justify-center rounded-2xl bg-cream p-3">
+              <Link to={`/phones/${l.slug}`} className="flex aspect-[4/5] items-center justify-center rounded-2xl p-3">
                 <img src={l.image} alt={l.name} className="h-full w-full product-img" />
               </Link>
               <div className="min-w-0">

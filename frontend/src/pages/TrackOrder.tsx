@@ -98,7 +98,7 @@ export default function TrackOrder() {
                 <ul className="mt-8 divide-y divide-line border-t border-line">
                   {order.lines.map((l) => (
                     <li key={l.lineId} className="flex items-center gap-4 py-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cream p-1.5"><img src={l.image} alt="" className="h-full w-full product-img" /></div>
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-1.5"><img src={l.image} alt="" className="h-full w-full product-img" /></div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold">{l.brand} {l.name}</p>
                         <p className="text-xs text-ink-3">{lineSpec(l)} × {l.quantity}</p>

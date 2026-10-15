@@ -15,7 +15,7 @@ export function AddedToast() {
   return (
     <div role="status" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-rise rounded-3xl border border-line bg-white p-5 shadow-toast sm:bottom-6 sm:left-auto sm:right-6">
       <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-cream">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl">
           <img src={justAdded.image} alt="" className="h-14 w-14 product-img" />
         </div>
         <div className="min-w-0 flex-1">

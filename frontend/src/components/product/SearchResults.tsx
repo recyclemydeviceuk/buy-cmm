@@ -24,7 +24,7 @@ export function SearchResults({ query, results, onPick, onSubmitAll, className, 
           {results.map((p) => (
             <li key={p.id}>
               <Link to={`/phones/${p.slug}`} onClick={onPick} className="flex items-center gap-3 px-2 py-2 transition-colors hover:bg-cream rounded-xl">
-                <span className={cn('flex shrink-0 items-center justify-center rounded-lg bg-cream', compact ? 'h-9 w-9' : 'h-11 w-11')}>
+                <span className={cn('flex shrink-0 items-center justify-center rounded-lg', compact ? 'h-9 w-9' : 'h-11 w-11')}>
                   <img src={p.image} alt="" className={cn('product-img', compact ? 'h-7 w-7' : 'h-9 w-9')} />
                 </span>
                 <span className="min-w-0 flex-1">
