@@ -12,10 +12,10 @@ Base path: `{VITE_API_BASE_URL}/api/buy`
 
 | Method | Path | Query / body | Returns |
 | --- | --- | --- | --- |
-| GET | `/products` | `ProductQuery` as query string: repeatable `brand`, `series`, `network`, `condition`, `storage`; `minPrice`, `maxPrice`, `search`, `sort` (`popular`, `price-asc`, `price-desc`, `newest`), `page`, `pageSize` | `Paged<Product>`; `fromPrice` on each item must be the lowest in-stock price that satisfies the variant-level filters |
+| GET | `/products` | `ProductQuery` as query string: repeatable `brand`, `series`, `condition`, `storage`; `minPrice`, `maxPrice`, `search`, `sort` (`popular`, `price-asc`, `price-desc`, `newest`), `page`, `pageSize` | `Paged<Product>`; `fromPrice` on each item must be the lowest in-stock price that satisfies the variant-level filters |
 | GET | `/products/facets` | same query | `Facets` with model counts per value (not variant counts) and the in-stock `priceRange` |
-| GET | `/products/featured` | | `Product[]` (home page rail and hero showcase, order set in admin Settings → Featured) |
-| GET | `/products/menu` | | `MenuProduct[]`: every active product with `id, slug, brand, name, series, image, fromPrice, rrp, releaseYear, rating, reviewCount, storages` (mega menu, instant search, sitemap) |
+| GET | `/products/featured` | | `Product[]` (home page rail and hero showcase, order set in admin Settings → Featured; sold-out products are left out) |
+| GET | `/products/menu` | | `MenuProduct[]`: every active product with `id, slug, brand, name, series, image, fromPrice, rrp, releaseYear, rating, reviewCount, storages, inStock` (mega menu, instant search, sitemap) |
 | GET | `/reviews/recent` | `limit` (≤ 24) | `{ items: Review[], total, average }` of approved reviews, newest first (home page) |
 | GET | `/products/:slug` | | `Product` with every variant, or 404 |
 | GET | `/products/:slug/related` | | `Product[]` (up to 4, same series) |
@@ -25,18 +25,23 @@ Base path: `{VITE_API_BASE_URL}/api/buy`
 | POST | `/newsletter` | `{ email }` | `{ ok: true }` |
 | POST | `/contact` | `{ name, email, message, orderNumber? }` | `{ ok: true }`; sends an acknowledgement and an admin alert |
 | POST | `/products/:id/reviews` | `{ author, email, rating, title, body, orderNumber? }` | `{ ok: true, status: 'pending' }`; `verified` is set when the order number matches the email and product |
-| GET | `/config` | | Public store config: enabled delivery options, networks, grade copy, PayPal mode and client id |
+| GET | `/config` | | Public store config: enabled delivery options, grade copy and example photos, PayPal mode and client id |
 
 Notes for the backend build:
 
-- `Product.variants` is the full storage × network × condition matrix with
-  `price` and `stock`. The storefront hides a variant when `stock` is 0.
-- `condition` values are `excellent`, `good`, `fair` (buy-side grades). They
-  are not the sell-site grades (`New / Excellent`, `Good`, `Broken / Faulty`).
-- `network` values follow the sell site's networks collection; `Unlocked` is
-  always first.
-- Images: `Product.image` is a URL. The mock uses `/phones/*.webp` copied from
-  the sell site's device catalogue; the backend should serve the same S3 URLs.
+- `Product.variants` is the storage × colour × condition matrix with `price`
+  and `stock`. The storefront hides a variant when `stock` is 0. There is no
+  network: every phone is sold unlocked.
+- `Product.colours` is `[{ name, hex, image }]`. A variant's `colour` is one of
+  those names, or `''` for a product that has no colours yet. `hex` is the
+  swatch in the picker and `image` the photo shown when that colour is picked.
+- `condition` values are `premium`, `excellent`, `good`, `fair` (buy-side
+  grades, best first). `premium` is an original, unrefurbished phone sent boxed.
+  They are not the sell-site grades (`New / Excellent`, `Good`, `Broken / Faulty`).
+- Images: `Product.image` is a URL. The storefront API returns the photo of the
+  cheapest colour in stock there, falling back to the model's own image.
+- `config.conditions[].images` is `[{ url, caption }]`: example photos of a
+  phone in that grade, shown in the grading guide and on product pages.
 - Error responses: JSON `{ message }` with a non-2xx status. The HTTP adapter
   throws on any non-2xx.
 
@@ -80,13 +85,17 @@ List endpoints take `page` / `pageSize` and return `Paged<T>`; `all` is treated 
 | POST | `/products` | `ProductInput` | `AdminProduct` (201); `409` on duplicate slug |
 | PATCH | `/products/:id` | `Partial<ProductInput>` | `AdminProduct`. `featured` keeps `settings.featuredSlugs` in sync |
 | DELETE | `/products/:id` | | `204`. Products that appear in any order are archived, not deleted |
-| GET | `/variants` | `VariantListQuery` (`search`, `brand`, `network`, `condition`, `storage`, `stock`, `sort`) | `Paged<VariantRow> & { summary }` — one row per storage × network × condition |
-| PATCH | `/variants` | `{ updates: VariantUpdate[] }` | `{ updated }` |
+| GET | `/variants` | `VariantListQuery` (`search`, `brand`, `condition`, `storage`, `stock`, `sort`) | `Paged<VariantRow> & { summary }` — one row per storage × colour × condition |
+| PATCH | `/variants` | `{ updates: VariantUpdate[] }` (each names `productId`, `storage`, `colour`, `condition`) | `{ updated }` |
 | POST | `/pricing/preview` | `PriceRule` | `{ affected, sampleBefore, sampleAfter }` |
 | POST | `/pricing/apply` | `PriceRule` | `{ affected }` |
 
 `PriceRule`: `mode` (`percent` \| `fixed`), `amount`, optional `brand`, `series`,
-`condition`, `network`, and `roundTo` (`9` rounds to £…9). Prices never drop below £10.
+`condition`, and `roundTo` (`9` rounds to £…9). Prices never drop below £10.
+
+A product write is rejected with `400` when a variant names a colour the product
+does not have, two colours share a name, or the same storage × colour × condition
+appears twice.
 
 ## Orders
 
@@ -133,8 +142,8 @@ only `approved` reviews are returned by `GET /products/:id/reviews`.
 
 | Method | Path | Body | Returns |
 | --- | --- | --- | --- |
-| GET | `/settings` | | `Settings` (store details, delivery options, networks, storages, condition copy, featured slugs, low-stock threshold, PayPal mode/client ID, admin notifications) |
-| PATCH | `/settings` | `Partial<Settings>` | `Settings`. The storefront should read delivery options, networks and condition copy from here |
+| GET | `/settings` | | `Settings` (store details, delivery options, storages, condition copy and grade example photos, featured slugs, low-stock threshold, PayPal mode/client ID, admin notifications) |
+| PATCH | `/settings` | `Partial<Settings>` | `Settings`. The storefront reads delivery options and grade example photos from here |
 | GET | `/admins` | | `AdminUser[]` (`roleId`, `status` = `active` \| `suspended`) |
 | POST | `/admins` | `{ email, name, roleId }` | `AdminUser` |
 | PATCH | `/admins/:id` | `{ name?, roleId?, status? }` | `AdminUser`. An admin cannot change their own role or suspend themselves; at least one active Owner must remain |

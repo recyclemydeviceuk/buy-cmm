@@ -31,7 +31,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       <div className="flex flex-1 flex-col p-2 pb-1 sm:p-3 sm:pb-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3 sm:text-[11px] sm:tracking-[0.16em]">{product.brand} · {product.releaseYear}</p>
         <h3 className="mt-1 font-display text-[15px] font-bold leading-snug sm:mt-1.5 sm:text-[17px]">{product.name}</h3>
-        <p className="mt-1 text-[11px] text-ink-3 sm:text-xs">{storageRange}<span className="hidden sm:inline"> · Unlocked or network</span></p>
+        <p className="mt-1 text-[11px] text-ink-3 sm:text-xs">{storageRange}<span className="hidden sm:inline"> · Unlocked</span></p>
         <div className="mt-2 flex items-center gap-1.5">
           {product.reviewCount > 0 ? (
             <>

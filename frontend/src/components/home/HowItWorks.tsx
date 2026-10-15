@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 
 const STEPS = [
   { n: '01', title: 'Pick a phone', body: 'Browse iPhone and Galaxy from the last seven years. Every one is fully tested and data-wiped.' },
-  { n: '02', title: 'Choose what matters', body: 'Storage, network and cosmetic grade change the price. Pay for what you care about and skip what you don’t.' },
+  { n: '02', title: 'Choose what matters', body: 'Storage, colour and cosmetic grade change the price. Pay for what you care about and skip what you don’t.' },
   { n: '03', title: 'It arrives tomorrow', body: 'Order before 3pm for free tracked next-day delivery, with a cable and 30 days to change your mind.' },
 ];
 

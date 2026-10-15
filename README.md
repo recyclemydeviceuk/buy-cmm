@@ -1,8 +1,8 @@
 # BuyUpon
 
 The CashMyMobile **buy** side: a standalone storefront where customers buy
-certified pre-owned iPhone and Samsung Galaxy phones by network, condition
-and price. It is deliberately separate from the sell site
+certified pre-owned, unlocked iPhone and Samsung Galaxy phones by colour,
+condition and price. It is deliberately separate from the sell site
 (`../python-backend-frontend`) and the sell admin panel (`../adminpanelcmm`).
 
 ```
@@ -62,13 +62,13 @@ backend, database, email and PayPal status.
 Screens: dashboard (revenue/orders/AOV with period comparison, daily chart, status
 mix, top sellers, stock by grade, attention tiles), orders (filters, bulk move to
 packing, CSV export) and order detail (status flow with tracking, refunds, notes,
-timeline, emails, edit delivery details), products (list, editor with storage ×
-network × grade price/stock matrix, price generator, featured, draft/archive),
+timeline, emails, edit delivery details), products (list, editor with colours and a
+storage × colour × grade price/stock matrix, price generator, featured, draft/archive),
 inventory & pricing (every variant inline-editable, low/out-of-stock views, bulk
 price rules), customers (derived from orders, lifetime value, notes), reviews
 (moderation + public replies), enquiries (inbox with reply templates), newsletter
-(subscribers + CSV export), settings (store, delivery, networks, storages,
-condition copy, featured rail, PayPal mode, notifications, team roles, data reset),
+(subscribers + CSV export), settings (store, delivery, storages,
+condition copy and grade example photos, featured rail, PayPal mode, notifications, team roles, data reset),
 activity log, and ⌘K global search.
 
 Order statuses shared by both apps: `confirmed → packing → dispatched → delivered`,

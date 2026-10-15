@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api';
-import type { MenuProduct, StoreConfig } from '../types';
+import type { Condition, GradePhoto, MenuProduct, StoreConfig } from '../types';
 import { buildBrandMenus, type BrandMenu } from '../data/menu';
 import { DEFAULT_CONFIG, siteContact } from '../data/site';
 
@@ -46,6 +46,11 @@ export const useMenuProducts = () => useCatalog().products;
 export const useBrandMenus = () => useCatalog().menus;
 export const useStoreConfig = () => useCatalog().config;
 export const useCatalogState = () => useCatalog();
+/** Example photos for each grade, managed in the admin (Settings → Catalogue). Empty until the config has loaded. */
+export function useGradePhotos(): Partial<Record<Condition, GradePhoto[]>> {
+  const { conditions } = useStoreConfig();
+  return useMemo(() => Object.fromEntries(conditions.map((c) => [c.key, c.images ?? []])), [conditions]);
+}
 export function useSiteContact() {
   const config = useStoreConfig();
   return useMemo(() => siteContact(config), [config]);

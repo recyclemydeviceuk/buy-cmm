@@ -13,12 +13,14 @@ export function BrandSplit() {
     <div className="grid gap-4 md:grid-cols-2 md:gap-5">
       {BRAND_MENUS.map((b) => {
         const s = STYLE[b.key];
+        const live = b.groups.reduce((n, g) => n + g.items.filter((i) => i.inStock).length, 0);
+        const models = `${live} ${b.key === 'Apple' ? 'iPhone' : 'Galaxy'} ${live === 1 ? 'model' : 'models'} in stock`;
         return (
           <Link key={b.key} to={b.to} className={`group relative flex min-h-[300px] overflow-hidden rounded-[32px] p-8 transition-transform duration-500 hover:-translate-y-1 md:min-h-[360px] md:p-10 ${s.wrap}`}>
             <div className="relative z-10 flex w-[56%] flex-col md:w-[58%]">
               <p className={`eyebrow ${s.sub}`}>{b.tagline.split(' · ')[0]}</p>
               <h3 className={`mt-3 text-3xl md:text-[2.5rem] ${b.key === 'Apple' ? 'text-white' : ''}`}>{b.label}</h3>
-              <p className={`mt-2 max-w-[24ch] text-sm md:text-base ${s.sub}`}>{b.key === 'Apple' ? `${b.groups.reduce((n, g) => n + g.items.length, 0)} iPhone models, every grade.` : `${b.groups.reduce((n, g) => n + g.items.length, 0)} Galaxy models. Flagship for less.`}</p>
+              <p className={`mt-2 max-w-[24ch] text-sm md:text-base ${s.sub}`}>{!live ? 'Back in stock soon.' : b.key === 'Apple' ? `${models}, all unlocked.` : `${models}. Flagship for less.`}</p>
               <span className={`mt-auto inline-flex h-11 w-fit items-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold transition-colors ${s.btn}`}>
                 Shop {b.key === 'Apple' ? 'iPhone' : 'Samsung'} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
               </span>

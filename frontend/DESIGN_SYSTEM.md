@@ -57,7 +57,10 @@ call to action, one accent word per heading and the trade-in block.
 - `product/`: `ProductCard` (4:5 cream well, "£x off new" ink badge, "New in"
   red badge, storage range, stars, "Starting at" price, arrow on hover),
   `ProductGrid`, `ProductRail`, `FilterPanel` (card, custom checkboxes, dual
-  range), `VariantPicker` (chips with price, grade cards A/B/C).
+  range), `VariantPicker` (colour swatch chips, storage chips with price, grade
+  cards A+/A/B/C; picking one option moves the others to the nearest combination
+  in stock), `GradeExample` (example photo of a grade with its promises over it;
+  used in the product gallery and the grading guide).
 - `home/`: `Hero` (centred headline with serif accent, pill search, quick
   chips), `DeviceShowcase` (five devices on tinted tiles in an arc),
   `TrustStrip` (overlapping white card), `BrandSplit` (ink iPhone tile + sky
@@ -68,7 +71,10 @@ call to action, one accent word per heading and the trade-in block.
 
 ## Imagery
 
-Only real device photos from the catalogue (`public/phones/`). On tinted or
-cream surfaces they use `.product-img` (`mix-blend-multiply`) so white
-backgrounds disappear. On dark or red surfaces use the transparent cutouts in
+Only real device photos: the catalogue (`public/phones/`) and each colour's
+own photo (`Product.colours[].image`, square, phone centred on pure white). On
+tinted or cream surfaces they use `.product-img` (`mix-blend-multiply`) so white
+backgrounds disappear. Grade example photos (`config.conditions[].images`) are
+real photographs of phones in that condition, shown full-bleed and always
+labelled “Example image”. On dark or red surfaces use the transparent cutouts in
 `public/stage/`. No stock photos, no 3D stage, no illustrations.

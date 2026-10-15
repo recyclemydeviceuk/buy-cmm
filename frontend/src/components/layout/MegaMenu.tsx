@@ -13,7 +13,7 @@ export function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
   const brand = BRAND_MENUS.find((b) => b.key === brandKey) ?? BRAND_MENUS[0];
   if (!brand) return <div className="p-8 text-sm text-ink-3">Loading the catalogue…</div>;
   const tile = brandKey === 'Apple' ? 'bg-tint-peach' : 'bg-tint-sky';
-  const popular = brand.groups.flatMap((g) => g.items).sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 5);
+  const popular = brand.groups.flatMap((g) => g.items).sort((a, b) => Number(b.inStock) - Number(a.inStock) || b.reviewCount - a.reviewCount).slice(0, 5);
   const row = 'flex h-11 items-center justify-between rounded-xl px-3 text-[15px] text-ink-2 transition-colors hover:bg-cream hover:text-ink';
 
   return (
@@ -79,7 +79,7 @@ export function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
                 <li key={it.slug}>
                   <Link to={`/phones/${it.slug}`} onClick={onNavigate} className={row}>
                     <span className="truncate">{it.name}</span>
-                    <span className="ml-3 shrink-0 text-xs tabular-nums text-ink-3">from {money(it.fromPrice)}</span>
+                    <span className="ml-3 shrink-0 text-xs tabular-nums text-ink-3">{it.inStock ? `from ${money(it.fromPrice)}` : 'Sold out'}</span>
                   </Link>
                 </li>
               ))}
@@ -107,7 +107,7 @@ export function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-ink-2">
-              from <span className="font-display text-lg font-bold text-ink">{money(brand.featured.fromPrice)}</span>
+              {brand.featured.inStock ? <>from <span className="font-display text-lg font-bold text-ink">{money(brand.featured.fromPrice)}</span></> : 'Sold out for now'}
             </span>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white transition-transform group-hover:translate-x-1">
               <ArrowRight size={16} />

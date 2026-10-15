@@ -3,21 +3,25 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Battery, Check, PackageCheck, Search, ShieldCheck, SlidersHorizontal, Smile, Sparkles, X } from 'lucide-react';
 import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Button } from '../components/ui/Button';
+import { GradeExample } from '../components/product/GradeExample';
+import { useGradePhotos } from '../store/catalog';
 import { CONDITIONS, CONDITION_ORDER } from '../lib/format';
 import type { Condition } from '../types';
 import { cn } from '../lib/cn';
 
 const STEPS = [
   { icon: Search, title: 'Pick a phone', body: 'Browse iPhone and Galaxy models from the last seven years. Every one has been fully tested and data-wiped.', fact: 'Under 2 minutes to choose', tint: 'bg-tint-lemon' },
-  { icon: SlidersHorizontal, title: 'Choose what matters', body: 'Storage, network lock and cosmetic condition all change the price. Pay for what you care about and skip what you don’t.', fact: '3 grades, 5 networks', tint: 'bg-tint-sky' },
+  { icon: SlidersHorizontal, title: 'Choose what matters', body: 'Storage, colour and condition all change the price. Pay for what you care about and skip what you don’t.', fact: '4 grades, all unlocked', tint: 'bg-tint-sky' },
   { icon: PackageCheck, title: 'Delivered tomorrow', body: 'Order before 3pm for free tracked next-day delivery. Your phone arrives in protective packaging with a charging cable.', fact: 'Free, tracked, signed for', tint: 'bg-tint-mint' },
   { icon: Smile, title: 'Love it or return it', body: '30 days to change your mind, no questions asked, plus a 12-month warranty for anything that isn’t cosmetic.', fact: '30 days · 12 months', tint: 'bg-tint-peach' },
 ];
 
-const GRADE_META: Record<Condition, { letter: string; battery: string; saving: string; screen: string; body: string; image: string; tint: string }> = {
-  excellent: { letter: 'A', battery: '90%+', saving: '30–45%', screen: 'No scratches', body: 'Micro-marks only', image: '/phones/apple-iphone-15.webp', tint: 'bg-tint-mint' },
-  good: { letter: 'B', battery: '85%+', saving: '40–55%', screen: 'Hairline, invisible when on', body: 'Light scuffs', image: '/phones/apple-iphone-14.webp', tint: 'bg-tint-sky' },
-  fair: { letter: 'C', battery: '80%+', saving: '50–65%', screen: 'Visible, no cracks', body: 'Scuffs, dents or chips', image: '/phones/apple-iphone-12.webp', tint: 'bg-tint-lemon' },
+/** Shown in place of a grade's example photos until some have been added in the admin. */
+const GRADE_FALLBACK: Record<Condition, { image: string; tint: string }> = {
+  premium: { image: '/phones/apple-iphone-17-pro.webp', tint: 'bg-tint-peach' },
+  excellent: { image: '/phones/apple-iphone-15.webp', tint: 'bg-tint-mint' },
+  good: { image: '/phones/apple-iphone-14.webp', tint: 'bg-tint-sky' },
+  fair: { image: '/phones/apple-iphone-12.webp', tint: 'bg-tint-lemon' },
 };
 
 const CHECKS = [
@@ -41,9 +45,10 @@ const CHECKS = [
 const NEVER = ['Cracked screens or back glass', 'Water damage indicator triggered', 'Reported lost, stolen or on finance', 'Batteries below 80% health', 'Non-genuine screens that fail colour or touch', 'Account locks we cannot remove'];
 
 export default function HowItWorks() {
-  useSeo({ title: 'How it works: testing, grading and delivery', description: 'How every pre-owned phone is tested on 40 points, graded Excellent, Good or Fair, and delivered next day with a 12-month warranty and 30-day returns.', canonical: '/how-it-works', jsonLd: breadcrumbLd([['Home', '/'], ['How it works', '/how-it-works']]) });
+  useSeo({ title: 'How it works: testing, grading and delivery', description: 'How every pre-owned phone is tested on 40 points, graded Premium, Excellent, Good or Fair, and delivered next day with a 12-month warranty and 30-day returns.', canonical: '/how-it-works', jsonLd: breadcrumbLd([['Home', '/'], ['How it works', '/how-it-works']]) });
   const [grade, setGrade] = useState<Condition>('excellent');
-  const g = GRADE_META[grade];
+  const g = CONDITIONS[grade];
+  const photos = useGradePhotos()[grade] ?? [];
 
   return (
     <>
@@ -57,7 +62,7 @@ export default function HowItWorks() {
             </h1>
           </div>
           <div className="lg:col-span-5 lg:pb-2">
-            <p className="max-w-md text-[17px] text-ink-2">Every phone passes the same 40-point functional test. The grade only describes cosmetic wear, and it is checked by a person, not a photo.</p>
+            <p className="max-w-md text-[17px] text-ink-2">Every phone passes the same 40-point functional test. The grade describes how the phone looks, and it is checked by a person, not a photo.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button to="/shop" variant="dark">Shop phones <ArrowRight size={16} /></Button>
               <a href="#grades" className="inline-flex h-12 items-center gap-2 rounded-full border border-line px-6 text-sm font-semibold hover:border-ink">See the grades</a>
@@ -67,7 +72,7 @@ export default function HowItWorks() {
         <dl className="mt-12 grid grid-cols-2 divide-x divide-line border-y border-line md:grid-cols-4">
           {[
             ['40', 'functional checks'],
-            ['3', 'honest grades'],
+            ['4', 'honest grades'],
             ['24h', 'order to doorstep'],
             ['12', 'months of warranty'],
           ].map(([v, l], i) => (
@@ -116,34 +121,34 @@ export default function HowItWorks() {
             <p className="eyebrow text-brand-600">Condition grades</p>
             <h2 className="mt-3 text-3xl md:text-4xl">Same phone. Same warranty. <span className="serif-accent text-ink-3">You choose</span> how it looks.</h2>
           </div>
-          <div className="mx-auto mt-8 flex w-fit rounded-full border border-line bg-white p-1" role="tablist">
+          <div className="mx-auto mt-8 flex w-fit max-w-full overflow-x-auto rounded-full border border-line bg-white p-1 no-scrollbar" role="tablist">
             {CONDITION_ORDER.map((c) => (
-              <button key={c} type="button" role="tab" aria-selected={grade === c} onClick={() => setGrade(c)} className={cn('flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-all', grade === c ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink')}>
-                <span className={cn('flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold', grade === c ? 'bg-white/20' : 'bg-cream')}>{GRADE_META[c].letter}</span>
+              <button key={c} type="button" role="tab" aria-selected={grade === c} onClick={() => setGrade(c)} className={cn('flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-all sm:px-5', grade === c ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink')}>
+                <span className={cn('flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold', grade === c ? 'bg-white/20' : 'bg-cream')}>{CONDITIONS[c].grade}</span>
                 {CONDITIONS[c].label}
               </button>
             ))}
           </div>
 
           <div key={grade} className="mx-auto mt-10 grid max-w-5xl gap-4 animate-pop lg:grid-cols-12">
-            <div className={cn('flex items-center justify-center rounded-[32px] p-6 lg:col-span-5 lg:p-10', g.tint)}>
-              <img src={g.image} alt="" className="h-48 w-auto product-img lg:h-72" />
-            </div>
+            {photos.length ? (
+              <GradeExample condition={grade} photos={photos} className="min-h-[340px] lg:col-span-5" />
+            ) : (
+              <div className={cn('flex items-center justify-center rounded-[32px] p-6 lg:col-span-5 lg:p-10', GRADE_FALLBACK[grade].tint)}>
+                <img src={GRADE_FALLBACK[grade].image} alt="" className="h-48 w-auto product-img lg:h-72" />
+              </div>
+            )}
             <div className="rounded-[32px] border border-line bg-white p-6 lg:col-span-7 md:p-10">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="eyebrow">Grade {g.letter}</p>
-                  <h3 className="mt-1 font-display text-3xl font-bold">{CONDITIONS[grade].label}</h3>
-                  <p className="mt-1 text-ink-3">{CONDITIONS[grade].short}</p>
+                  <p className="eyebrow">Grade {g.grade}</p>
+                  <h3 className="mt-1 font-display text-3xl font-bold">{g.label}</h3>
+                  <p className="mt-1 text-ink-3">{g.short}</p>
                 </div>
-                <span className="rounded-full bg-tint-mint px-3 py-1.5 text-xs font-bold text-success">Save {g.saving} vs new</span>
+                {g.saving && <span className="shrink-0 rounded-full bg-tint-mint px-3 py-1.5 text-xs font-bold text-success">Save {g.saving} vs new</span>}
               </div>
               <dl className="mt-6 grid grid-cols-3 gap-2 md:gap-3">
-                {[
-                  ['Screen', g.screen],
-                  ['Body', g.body],
-                  ['Battery', g.battery],
-                ].map(([k, v]) => (
+                {g.facts.map(([k, v]) => (
                   <div key={k} className="rounded-2xl bg-cream-2 p-3 md:p-4">
                     <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">{k}</dt>
                     <dd className="mt-1 text-sm font-semibold leading-snug">{v}</dd>
@@ -151,13 +156,13 @@ export default function HowItWorks() {
                 ))}
               </dl>
               <ul className="mt-6 space-y-2">
-                {CONDITIONS[grade].detail.map((d) => (
+                {g.detail.map((d) => (
                   <li key={d} className="flex items-start gap-2.5 text-sm text-ink-2"><Check size={15} className="mt-0.5 shrink-0 text-success" strokeWidth={3} /> {d}</li>
                 ))}
               </ul>
               <div className="mt-7 flex items-center justify-between border-t border-line pt-5">
                 <span className="flex items-center gap-2 text-xs text-ink-3"><ShieldCheck size={14} /> 12-month warranty on every grade</span>
-                <Link to={`/shop?condition=${grade}`} className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline">Shop {CONDITIONS[grade].label.toLowerCase()} <ArrowRight size={14} /></Link>
+                <Link to={`/shop?condition=${grade}`} className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold hover:underline">Shop {g.label.toLowerCase()} <ArrowRight size={14} /></Link>
               </div>
             </div>
           </div>

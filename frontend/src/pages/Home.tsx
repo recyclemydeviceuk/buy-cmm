@@ -26,7 +26,7 @@ export default function Home() {
       <TrustStrip />
 
       <Section className="pb-6 md:pb-8">
-        <SectionHeading eyebrow="Shop by brand" title={<>Two brands. <span className="serif-accent text-ink-3">Every</span> model worth owning.</>} blurb="Every iPhone and Galaxy from the last seven years, priced by storage, network and condition." />
+        <SectionHeading eyebrow="Shop by brand" title={<>Two brands. <span className="serif-accent text-ink-3">Every</span> model worth owning.</>} blurb="Every iPhone and Galaxy from the last seven years, priced by storage, colour and condition." />
         <BrandSplit />
       </Section>
 
@@ -45,7 +45,7 @@ export default function Home() {
       </Section>
 
       <Section id="grades">
-        <SectionHeading eyebrow="Condition grades" title={<>Three grades. <span className="serif-accent text-ink-3">One honest</span> description each.</>} blurb="Cosmetic condition is the only thing that changes between grades. Every phone works perfectly and carries the same warranty." action={{ label: 'Full grading guide', to: '/how-it-works#grades' }} />
+        <SectionHeading eyebrow="Condition grades" title={<>Four grades. <span className="serif-accent text-ink-3">One honest</span> description each.</>} blurb="Every phone works perfectly and carries the same warranty. The grade tells you how it looks, and Premium means original, boxed and never refurbished." action={{ label: 'Full grading guide', to: '/how-it-works#grades' }} />
         <ConditionGuide />
       </Section>
 

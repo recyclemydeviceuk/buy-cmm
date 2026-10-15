@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useSiteContact } from '../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Mail, Search } from 'lucide-react';
-import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Accordion } from '../components/ui/Accordion';
 
@@ -12,8 +11,8 @@ const GROUPS: Array<{ id: string; title: string; blurb: string; items: Array<{ q
     title: 'Ordering',
     blurb: 'What you are buying and how to pay for it.',
     items: [
-      { q: 'Are these phones new?', a: 'No. Every phone is pre-owned and professionally restored. It has been fully tested, data-wiped and graded for cosmetic condition. Functionally it is as good as new, and it is a lot cheaper.' },
-      { q: 'What is the difference between Unlocked and a network?', a: 'Unlocked phones work with any SIM card from any UK network. Network-locked phones are cheaper but only work on that network (and virtual networks that run on it) until you unlock them, which the network can usually do for free after a set period.' },
+      { q: 'Are these phones new?', a: 'No. Every phone is pre-owned. It has been fully tested, data-wiped and graded for condition. Functionally it is as good as new, and it is a lot cheaper. Premium phones are original devices that have never been refurbished, and they come boxed.' },
+      { q: 'Are your phones unlocked?', a: 'Yes. Every phone we sell is unlocked, so it works with a SIM card from any UK network. There is no network to choose when you order.' },
       { q: 'Can I pay in instalments?', a: 'Not yet. We are adding Klarna and PayPal Pay in 3 later this year. For now we accept all major debit and credit cards.' },
       { q: 'Do you do trade-ins?', a: 'Yes, through our sell site. Get an instant quote for your old phone at cashmymobile.co.uk, post it to us free, and we pay you within a day of receiving it.' },
     ],
@@ -51,10 +50,10 @@ const GROUPS: Array<{ id: string; title: string; blurb: string; items: Array<{ q
 ];
 
 export default function Faq() {
-  const { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
+  const { SUPPORT_EMAIL } = useSiteContact();
   useSeo({
     title: 'Help centre: ordering, delivery, warranty and returns',
-    description: 'Answers on ordering, unlocked vs network phones, free next-day delivery, the 12-month warranty and 30-day returns at CashMyMobile.',
+    description: 'Answers on ordering, unlocked phones, condition grades, free next-day delivery, the 12-month warranty and 30-day returns at CashMyMobile.',
     canonical: '/faq',
     jsonLd: [
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: GROUPS.flatMap((g) => g.items).map((it) => ({ '@type': 'Question', name: it.q, acceptedAnswer: { '@type': 'Answer', text: it.a } })) },
@@ -118,15 +117,7 @@ export default function Faq() {
 
       {/* Contact strip */}
       <section className="container pb-8">
-        <div className="grid gap-3 md:grid-cols-3">
-          <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="group flex items-center gap-4 rounded-[24px] border border-line p-5 transition-colors hover:bg-cream-2">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white"><WhatsAppIcon size={18} /></span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold">WhatsApp us</span>
-              <span className="block truncate text-sm text-ink-3">{WHATSAPP_DISPLAY}</span>
-            </span>
-            <ArrowRight size={16} className="text-ink-4 transition-transform group-hover:translate-x-0.5" />
-          </a>
+        <div className="grid gap-3 md:grid-cols-2">
           <a href={`mailto:${SUPPORT_EMAIL}`} className="group flex items-center gap-4 rounded-[24px] border border-line p-5 transition-colors hover:bg-cream-2">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream"><Mail size={18} /></span>
             <span className="min-w-0 flex-1">

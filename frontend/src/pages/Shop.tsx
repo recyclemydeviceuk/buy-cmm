@@ -13,7 +13,7 @@ import { conditionLabel, money } from '../lib/format';
 import { cn } from '../lib/cn';
 
 const PAGE_SIZE = 24;
-const LIST_KEYS = ['brand', 'series', 'network', 'condition', 'storage'] as const;
+const LIST_KEYS = ['brand', 'series', 'condition', 'storage'] as const;
 
 function parse(sp: URLSearchParams): ProductQuery {
   const q: ProductQuery = { page: Number(sp.get('page') ?? 1) || 1, pageSize: PAGE_SIZE, sort: (sp.get('sort') as SortKey) || 'popular' };
@@ -45,10 +45,10 @@ export default function Shop() {
   const [drawer, setDrawer] = useState(false);
 
   const title = query.search ? `Results for “${query.search}”` : query.brand?.length === 1 ? (query.brand[0] === 'Apple' ? 'Shop iPhone' : 'Shop Samsung Galaxy') : query.series?.includes('Galaxy Z') && query.series.length === 1 ? 'Shop foldables' : 'Shop all phones';
-  const brandOnly = query.brand?.length === 1 && !query.search && !query.series?.length && !query.network?.length && !query.condition?.length && !query.storage?.length && query.minPrice === undefined && query.maxPrice === undefined && (query.page ?? 1) === 1;
+  const brandOnly = query.brand?.length === 1 && !query.search && !query.series?.length && !query.condition?.length && !query.storage?.length && query.minPrice === undefined && query.maxPrice === undefined && (query.page ?? 1) === 1;
   useSeo({
     title,
-    description: query.brand?.[0] === 'Apple' ? 'Pre-owned iPhone 11 to iPhone 18 Pro Max, every storage and network, graded Excellent, Good or Fair. 12-month warranty and free next-day delivery.' : query.brand?.[0] === 'Samsung' ? 'Pre-owned Samsung Galaxy S, Z foldables, A series and Note, tested and graded by hand. 12-month warranty and free next-day delivery.' : 'Browse every pre-owned iPhone and Samsung Galaxy we sell. Filter by price, network, storage and condition. 12-month warranty, free next-day delivery.',
+    description: query.brand?.[0] === 'Apple' ? 'Pre-owned, unlocked iPhones from iPhone 11 to iPhone 18 Pro Max, graded Premium, Excellent, Good or Fair. 12-month warranty and free next-day delivery.' : query.brand?.[0] === 'Samsung' ? 'Pre-owned Samsung Galaxy S, Z foldables, A series and Note, tested and graded by hand. 12-month warranty and free next-day delivery.' : 'Browse every pre-owned iPhone and Samsung Galaxy we sell. Filter by price, storage and condition. 12-month warranty, free next-day delivery.',
     canonical: brandOnly ? `/shop?brand=${query.brand![0]}` : '/shop',
     noindex: !!query.search || (query.page ?? 1) > 1,
     jsonLd: breadcrumbLd([['Home', '/'], [title, '/shop']]),
@@ -122,7 +122,7 @@ export default function Shop() {
             ) : !list.loading && total === 0 ? (
               <div className="card p-12 text-center">
                 <h2 className="font-display text-xl font-bold">No phones match those filters</h2>
-                <p className="mt-2 text-ink-3">Try widening the price range or removing a network.</p>
+                <p className="mt-2 text-ink-3">Try widening the price range or removing a filter.</p>
                 <Button variant="dark" className="mt-6" onClick={reset}>
                   Clear all filters
                 </Button>

@@ -13,7 +13,7 @@ export function useProductSearch(query: string, limit = 6): MenuProduct[] {
       .map((p) => {
         const hay = `${p.brand} ${p.name} ${p.series}`.toLowerCase();
         if (!words.every((w) => hay.includes(w))) return null;
-        const score = (p.name.toLowerCase().startsWith(term) ? 2 : 0) + (p.name.toLowerCase() === term ? 3 : 0) + p.reviewCount / 1000;
+        const score = (p.name.toLowerCase().startsWith(term) ? 2 : 0) + (p.name.toLowerCase() === term ? 3 : 0) + (p.inStock ? 1 : 0) + p.reviewCount / 1000;
         return { p, score };
       })
       .filter((x): x is { p: MenuProduct; score: number } => x !== null)

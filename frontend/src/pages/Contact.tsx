@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import { useSiteContact } from '../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, Check, Clock, Mail } from 'lucide-react';
-import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { api } from '../api';
 import { useSeo, breadcrumbLd } from '../lib/seo';
 import { Field, Select, TextArea } from '../components/ui/Field';
@@ -11,8 +10,8 @@ import { Button } from '../components/ui/Button';
 const TOPICS = ['Order question', 'Warranty claim', 'Return or refund', 'Trade-in', 'Something else'];
 
 export default function Contact() {
-  const { SUPPORT_EMAIL, SUPPORT_HOURS, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
-  useSeo({ title: 'Get in touch', description: 'Contact CashMyMobile by WhatsApp, email or the contact form. Order questions, warranty claims and returns answered within one working day.', canonical: '/contact', jsonLd: breadcrumbLd([['Home', '/'], ['Get in touch', '/contact']]) });
+  const { SUPPORT_EMAIL, SUPPORT_HOURS } = useSiteContact();
+  useSeo({ title: 'Get in touch', description: 'Contact CashMyMobile by email or the contact form. Order questions, warranty claims and returns answered within one working day.', canonical: '/contact', jsonLd: breadcrumbLd([['Home', '/'], ['Get in touch', '/contact']]) });
   const [form, setForm] = useState({ name: '', email: '', topic: TOPICS[0], order: '', message: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -41,16 +40,6 @@ export default function Contact() {
           <h1 className="mt-3 text-4xl text-white md:text-5xl md:leading-[1.05]">Talk to a <span className="serif-accent text-white/70">person.</span></h1>
           <p className="mt-4 max-w-sm text-white/60">Order questions, warranty claims, or you just want to check something before buying. We are a small team and we answer everything ourselves.</p>
           <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
-            <li>
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="group flex items-center gap-4 py-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white"><WhatsAppIcon size={18} /></span>
-                <span className="flex-1">
-                  <span className="block text-[15px] font-semibold">WhatsApp {WHATSAPP_DISPLAY}</span>
-                  <span className="block text-xs text-white/50">Quickest reply, {SUPPORT_HOURS.toLowerCase()}</span>
-                </span>
-                <ArrowUpRight size={16} className="text-white/50 transition-transform group-hover:translate-x-0.5" />
-              </a>
-            </li>
             <li>
               <a href={`mailto:${SUPPORT_EMAIL}`} className="group flex items-center gap-4 py-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15"><Mail size={17} /></span>

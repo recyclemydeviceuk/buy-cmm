@@ -5,7 +5,7 @@ import { useAsync } from '../hooks/useAsync';
 import { useSeo } from '../lib/seo';
 import type { Order } from '../types';
 import { Button } from '../components/ui/Button';
-import { conditionLabel, money } from '../lib/format';
+import { lineSpec, money } from '../lib/format';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cn } from '../lib/cn';
 
@@ -72,7 +72,7 @@ export default function OrderConfirmed() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">{l.brand} {l.name}</p>
-                    <p className="text-xs text-ink-3">{l.storage} · {l.network} · {conditionLabel(l.condition)} × {l.quantity}</p>
+                    <p className="text-xs text-ink-3">{lineSpec(l)} × {l.quantity}</p>
                   </div>
                   <p className="text-sm font-bold">{money(l.unitPrice * l.quantity)}</p>
                 </li>

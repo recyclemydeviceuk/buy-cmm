@@ -8,7 +8,7 @@ import { useStoreConfig } from '../store/catalog';
 import { useSeo } from '../lib/seo';
 import type { Address, DeliveryMethod } from '../types';
 import { Field } from '../components/ui/Field';
-import { conditionLabel, money } from '../lib/format';
+import { lineSpec, money } from '../lib/format';
 import { cn } from '../lib/cn';
 
 const EMPTY: Address = { firstName: '', lastName: '', email: '', phone: '', line1: '', line2: '', city: '', postcode: '' };
@@ -34,7 +34,8 @@ export default function Checkout() {
   const { lines, subtotal, clear } = useBasket();
   const navigate = useNavigate();
   const config = useStoreConfig();
-  const options = config.delivery.filter((d) => d.enabled);
+  // Next-day tracked is the only delivery method.
+  const options = config.delivery.filter((d) => d.enabled && d.id === 'next-day');
   const [address, setAddress] = useState<Address>(EMPTY);
   const [delivery, setDelivery] = useState<DeliveryMethod>(options[0]?.id ?? 'next-day');
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function Checkout() {
     setServerError(null);
     // The PayPal order ID is the payment token; the backend captures it server-side.
     const order = await api.checkout({
-      lines: lines.map((l) => ({ productId: l.productId, storage: l.storage, network: l.network, condition: l.condition, quantity: l.quantity })),
+      lines: lines.map((l) => ({ productId: l.productId, storage: l.storage, colour: l.colour, condition: l.condition, quantity: l.quantity })),
       customer: { ...address, postcode: address.postcode.toUpperCase().trim() },
       delivery,
       paymentToken: paypalOrderId,
@@ -170,7 +171,7 @@ export default function Checkout() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{l.name}</p>
-                    <p className="text-xs text-white/50">{l.storage} · {l.network} · {conditionLabel(l.condition)} × {l.quantity}</p>
+                    <p className="text-xs text-white/50">{lineSpec(l)} × {l.quantity}</p>
                   </div>
                   <p className="text-sm font-semibold">{money(l.unitPrice * l.quantity)}</p>
                 </li>

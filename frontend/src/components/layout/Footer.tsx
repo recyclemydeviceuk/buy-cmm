@@ -3,7 +3,6 @@ import { useSiteContact } from '../../store/catalog';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { api } from '../../api';
-import { WhatsAppIcon } from '../ui/WhatsAppIcon';
 
 const COLS = [
   { title: 'Shop', links: [['iPhone', '/shop?brand=Apple'], ['Samsung Galaxy', '/shop?brand=Samsung'], ['Foldables', '/shop?series=Galaxy%20Z'], ['Under £250', '/shop?maxPrice=250'], ['Newest models', '/shop?sort=newest']] },
@@ -12,7 +11,7 @@ const COLS = [
 ];
 
 export function Footer() {
-  const { SUPPORT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_URL } = useSiteContact();
+  const { SUPPORT_EMAIL } = useSiteContact();
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   async function submit(e: FormEvent) {
@@ -30,7 +29,6 @@ export function Footer() {
             <img src="/brand/cmm-logo.png" alt="CashMyMobile" className="h-6 w-auto" />
             <p className="mt-6 max-w-xs text-[15px] leading-relaxed text-ink-3">Certified pre-owned iPhone and Samsung, tested and graded by hand in the UK.</p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#25D366] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#1fbd5a]"><WhatsAppIcon size={16} /> {WHATSAPP_DISPLAY}</a>
               <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex h-10 items-center rounded-full border border-ink/15 px-4 text-sm font-semibold text-ink-2 transition-colors hover:border-ink hover:text-ink">{SUPPORT_EMAIL}</a>
             </div>
             <form onSubmit={submit} className="mt-12 max-w-sm">

@@ -4,9 +4,9 @@ import { Accordion } from '../ui/Accordion';
 
 const ITEMS = [
   { q: 'What condition are the phones in?', a: 'Each one was sold to us, which we tested on 40 points, wiped, repaired if needed and graded by hand. Functionally it is as good as new. The grade only describes cosmetic wear.' },
-  { q: 'Is it unlocked?', a: 'Choose “Unlocked” on the product page and it works with any UK SIM. Network-locked phones are cheaper and only work on that network until unlocked.' },
+  { q: 'Is it unlocked?', a: 'Yes. Every phone we sell is unlocked, so it works with a SIM from any UK network.' },
   { q: 'What if something goes wrong?', a: 'A 12-month warranty covers any hardware fault that isn’t accidental damage. We collect, repair or replace, and return it free. You also have 30 days to return it for a full refund.' },
-  { q: 'How do you check the battery?', a: 'With the manufacturer’s own diagnostics. Excellent phones have 90%+ battery health, Good 85%+, Fair 80%+. Anything lower gets a new battery before sale.' },
+  { q: 'How do you check the battery?', a: 'With the manufacturer’s own diagnostics. Premium and Excellent phones have 90%+ battery health, Good 85%+, Fair 80%+. Anything lower gets a new battery before sale.' },
 ];
 
 export function FaqTeaser() {

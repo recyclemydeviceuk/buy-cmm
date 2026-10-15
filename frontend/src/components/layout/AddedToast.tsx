@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { useBasket } from '../../store/basket';
-import { money, conditionLabel } from '../../lib/format';
+import { money, lineSpec } from '../../lib/format';
 import { Button } from '../ui/Button';
 
 export function AddedToast() {
@@ -24,7 +24,7 @@ export function AddedToast() {
           </p>
           <p className="mt-1 truncate font-display font-bold">{justAdded.name}</p>
           <p className="text-sm text-ink-3">
-            {justAdded.storage} · {justAdded.network} · {conditionLabel(justAdded.condition)} · {money(justAdded.unitPrice)}
+            {lineSpec(justAdded)} · {money(justAdded.unitPrice)}
           </p>
         </div>
         <button type="button" onClick={dismissJustAdded} className="rounded-full p-1.5 text-ink-3 hover:bg-cream focus-ring" aria-label="Dismiss">

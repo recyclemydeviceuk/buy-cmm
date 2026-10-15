@@ -6,7 +6,7 @@ import { useSeo } from '../lib/seo';
 import type { Order } from '../types';
 import { Field } from '../components/ui/Field';
 import { Button } from '../components/ui/Button';
-import { conditionLabel, money } from '../lib/format';
+import { lineSpec, money } from '../lib/format';
 import { cn } from '../lib/cn';
 
 const STAGES: Array<{ key: Order['status']; icon: typeof Check; label: string; sub: string }> = [
@@ -101,7 +101,7 @@ export default function TrackOrder() {
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cream p-1.5"><img src={l.image} alt="" className="h-full w-full product-img" /></div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold">{l.brand} {l.name}</p>
-                        <p className="text-xs text-ink-3">{l.storage} · {l.network} · {conditionLabel(l.condition)} × {l.quantity}</p>
+                        <p className="text-xs text-ink-3">{lineSpec(l)} × {l.quantity}</p>
                       </div>
                       <p className="text-sm font-semibold">{money(l.unitPrice * l.quantity)}</p>
                     </li>

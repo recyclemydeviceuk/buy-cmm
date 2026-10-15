@@ -4,12 +4,12 @@ import { useBasket } from '../store/basket';
 import { useStoreConfig } from '../store/catalog';
 import { useSeo } from '../lib/seo';
 import { Button } from '../components/ui/Button';
-import { conditionLabel, money } from '../lib/format';
+import { lineSpec, money } from '../lib/format';
 
 export default function Basket() {
   const config = useStoreConfig();
-  const cheapest = config.delivery.filter((d) => d.enabled).reduce<number | null>((min, d) => (min === null || d.fee < min ? d.fee : min), null);
-  const fastest = config.delivery.filter((d) => d.enabled).sort((a, b) => a.etaDays - b.etaDays)[0];
+  const cheapest = config.delivery.filter((d) => d.enabled && d.id === 'next-day').reduce<number | null>((min, d) => (min === null || d.fee < min ? d.fee : min), null);
+  const fastest = config.delivery.filter((d) => d.enabled && d.id === 'next-day').sort((a, b) => a.etaDays - b.etaDays)[0];
   useSeo({ title: 'Basket', noindex: true });
   const { lines, subtotal, count, setQuantity, remove } = useBasket();
 
@@ -44,7 +44,7 @@ export default function Basket() {
               <div className="min-w-0">
                 <p className="eyebrow">{l.brand}</p>
                 <Link to={`/phones/${l.slug}`} className="mt-1 block font-display text-lg font-bold hover:underline">{l.name}</Link>
-                <p className="mt-1 text-sm text-ink-3">{l.storage} · {l.network} · {conditionLabel(l.condition)}</p>
+                <p className="mt-1 text-sm text-ink-3">{lineSpec(l)}</p>
                 <div className="mt-4 flex items-center gap-4">
                   <div className="inline-flex h-10 items-center rounded-full border border-line">
                     <button type="button" onClick={() => setQuantity(l.lineId, l.quantity - 1)} className="flex h-full w-10 items-center justify-center rounded-full hover:bg-cream focus-ring" aria-label="Decrease quantity"><Minus size={14} /></button>

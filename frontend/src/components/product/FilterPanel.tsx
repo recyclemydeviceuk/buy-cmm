@@ -69,12 +69,12 @@ function PriceRange({ min, max, value, onCommit }: { min: number; max: number; v
 
 /** Minimal sidebar: no card, hairline groups, small caps headings. */
 export function FilterPanel({ facets, query, onChange, onReset }: Props) {
-  const toggle = (key: 'brand' | 'series' | 'network' | 'condition' | 'storage') => (v: string) => {
+  const toggle = (key: 'brand' | 'series' | 'condition' | 'storage') => (v: string) => {
     const cur = (query[key] ?? []) as string[];
     const next = cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v];
     onChange({ [key]: next.length ? next : undefined, page: 1 } as Partial<ProductQuery>);
   };
-  const active = ['brand', 'series', 'network', 'condition', 'storage'].some((k) => (query[k as keyof ProductQuery] as string[] | undefined)?.length) || query.minPrice !== undefined || query.maxPrice !== undefined;
+  const active = ['brand', 'series', 'condition', 'storage'].some((k) => (query[k as keyof ProductQuery] as string[] | undefined)?.length) || query.minPrice !== undefined || query.maxPrice !== undefined;
   if (!facets) return <div className="h-96 animate-pulse rounded-2xl bg-cream" />;
   const pmin = Math.floor(facets.priceRange.min / 10) * 10;
   const pmax = Math.ceil(facets.priceRange.max / 10) * 10;
@@ -91,7 +91,6 @@ export function FilterPanel({ facets, query, onChange, onReset }: Props) {
       <CheckList title="Brand" options={facets.brands} selected={query.brand ?? []} onToggle={toggle('brand')} />
       <CheckList title="Condition" options={facets.conditions} selected={query.condition ?? []} onToggle={toggle('condition')} />
       <PriceRange min={pmin} max={pmax} value={[query.minPrice ?? pmin, query.maxPrice ?? pmax]} onCommit={([a, b]) => onChange({ minPrice: a <= pmin ? undefined : a, maxPrice: b >= pmax ? undefined : b, page: 1 })} />
-      <CheckList title="Network" options={facets.networks} selected={query.network ?? []} onToggle={toggle('network')} />
       <CheckList title="Storage" options={facets.storages} selected={query.storage ?? []} onToggle={toggle('storage')} />
       <CheckList title="Range" options={facets.series} selected={query.series ?? []} onToggle={toggle('series')} />
     </div>

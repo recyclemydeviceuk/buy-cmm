@@ -7,6 +7,7 @@ export interface MenuItem {
   fromPrice: number;
   releaseYear: number;
   reviewCount: number;
+  inStock: boolean;
 }
 export interface MenuGroup {
   title: string;
@@ -20,10 +21,10 @@ export interface BrandMenu {
   to: string;
   image: string;
   groups: MenuGroup[];
-  featured: { title: string; blurb: string; slug: string; image: string; fromPrice: number };
+  featured: { title: string; blurb: string; slug: string; image: string; fromPrice: number; inStock: boolean };
 }
 
-const toItem = (p: MenuProduct): MenuItem => ({ name: p.name, slug: p.slug, image: p.image, fromPrice: p.fromPrice, releaseYear: p.releaseYear, reviewCount: p.reviewCount });
+const toItem = (p: MenuProduct): MenuItem => ({ name: p.name, slug: p.slug, image: p.image, fromPrice: p.fromPrice, releaseYear: p.releaseYear, reviewCount: p.reviewCount, inStock: p.inStock });
 const byNewest = (a: MenuProduct, b: MenuProduct) => b.releaseYear - a.releaseYear || b.rrp - a.rrp;
 
 function iphoneGen(p: MenuProduct): number {
@@ -36,7 +37,13 @@ function galaxyGen(p: MenuProduct): number {
   return m ? Number(m[1]) : 0;
 }
 const pick = (list: MenuProduct[], fn: (p: MenuProduct) => boolean) => list.filter(fn).map(toItem);
-const star = (list: MenuProduct[]) => [...list].sort((a, b) => b.reviewCount * b.rating - a.reviewCount * a.rating || byNewest(a, b))[0];
+/** The model a brand leads with: something we can sell today where possible, then the best reviewed, then the newest. */
+const star = (list: MenuProduct[]) => [...list].sort((a, b) => Number(b.inStock) - Number(a.inStock) || b.reviewCount * b.rating - a.reviewCount * a.rating || byNewest(a, b))[0];
+const tagline = (list: MenuProduct[]) => {
+  const live = list.filter((p) => p.inStock);
+  return live.length ? `From £${Math.min(...live.map((p) => p.fromPrice))}` : 'Back in stock soon';
+};
+const featured = (top: MenuProduct) => ({ title: top.name, blurb: `${top.series} · ${top.releaseYear}`, slug: top.slug, image: top.image, fromPrice: top.fromPrice, inStock: top.inStock });
 
 /** Builds the "Buy a phone" menus from the live catalogue. Groups with no models are dropped. */
 export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
@@ -50,7 +57,7 @@ export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
     menus.push({
       key: 'Apple',
       label: 'iPhone',
-      tagline: `From £${Math.min(...apple.map((p) => p.fromPrice))}`,
+      tagline: tagline(apple),
       to: '/shop?brand=Apple',
       image: top.image,
       groups: [
@@ -59,7 +66,7 @@ export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
         { title: `iPhone ${newest - 4} & ${newest - 5}`, to: `/shop?brand=Apple&search=iPhone%20${newest - 4}`, items: pick(apple, (p) => [newest - 4, newest - 5].includes(iphoneGen(p))) },
         { title: `iPhone ${newest - 6} and earlier`, to: '/shop?brand=Apple&sort=price-asc', items: pick(apple, (p) => iphoneGen(p) <= newest - 6) },
       ].filter((g) => g.items.length),
-      featured: { title: top.name, blurb: `${top.series} · ${top.releaseYear} · all grades`, slug: top.slug, image: top.image, fromPrice: top.fromPrice },
+      featured: featured(top),
     });
   }
   if (samsung.length) {
@@ -69,7 +76,7 @@ export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
     menus.push({
       key: 'Samsung',
       label: 'Samsung Galaxy',
-      tagline: `From £${Math.min(...samsung.map((p) => p.fromPrice))}`,
+      tagline: tagline(samsung),
       to: '/shop?brand=Samsung',
       image: top.image,
       groups: [
@@ -78,7 +85,7 @@ export function buildBrandMenus(products: MenuProduct[]): BrandMenu[] {
         { title: 'Galaxy Z foldables', to: '/shop?brand=Samsung&series=Galaxy%20Z', items: pick(samsung, (p) => p.series === 'Galaxy Z') },
         { title: 'Galaxy A & Note', to: '/shop?brand=Samsung&series=Galaxy%20A&series=Galaxy%20Note', items: pick(samsung, (p) => p.series === 'Galaxy A' || p.series === 'Galaxy Note') },
       ].filter((g) => g.items.length),
-      featured: { title: top.name, blurb: `${top.series} · ${top.releaseYear} · all grades`, slug: top.slug, image: top.image, fromPrice: top.fromPrice },
+      featured: featured(top),
     });
   }
   return menus;
@@ -88,6 +95,5 @@ export const QUICK_LINKS: Array<{ label: string; to: string }> = [
   { label: 'All phones', to: '/shop' },
   { label: 'Under £250', to: '/shop?maxPrice=250' },
   { label: 'Excellent condition', to: '/shop?condition=excellent' },
-  { label: 'Unlocked only', to: '/shop?network=Unlocked' },
   { label: 'Newest arrivals', to: '/shop?sort=newest' },
 ];

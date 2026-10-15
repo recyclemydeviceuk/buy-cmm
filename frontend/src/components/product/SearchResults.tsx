@@ -31,7 +31,7 @@ export function SearchResults({ query, results, onPick, onSubmitAll, className, 
                   <span className="block truncate font-semibold">{p.name}</span>
                   <span className="block text-xs text-ink-3">{p.brand} · {p.storages[0]} – {p.storages[p.storages.length - 1]}</span>
                 </span>
-                <span className="shrink-0 text-xs text-ink-3">from <span className="font-semibold text-ink">{money(p.fromPrice)}</span></span>
+                <span className="shrink-0 text-xs text-ink-3">{p.inStock ? <>from <span className="font-semibold text-ink">{money(p.fromPrice)}</span></> : 'Sold out'}</span>
               </Link>
             </li>
           ))}
