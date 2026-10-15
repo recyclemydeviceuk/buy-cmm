@@ -11,6 +11,20 @@ import { SearchResults } from '../product/SearchResults';
 
 type Panel = 'menu' | 'search' | null;
 
+function SiteSwitch({ full = false }: { full?: boolean }) {
+  const base = 'inline-flex h-8 items-center justify-center rounded-full px-3.5 text-[13px] font-bold transition-colors';
+  return (
+    <div role="group" aria-label="Switch between buying and selling" className={cn('items-center gap-0.5 rounded-full border border-line bg-cream p-0.5', full ? 'flex w-full' : 'hidden md:inline-flex')}>
+      <span aria-current="true" className={cn(base, 'bg-ink text-white', full && 'h-10 flex-1 text-sm')}>
+        {full ? 'Buy a phone' : 'Buy'}
+      </span>
+      <a href="https://cashmymobile.co.uk/" className={cn(base, 'text-ink-2 hover:bg-white hover:text-ink focus-ring', full && 'h-10 flex-1 text-sm')}>
+        {full ? 'Sell a phone' : 'Sell'}
+      </a>
+    </div>
+  );
+}
+
 export function Header() {
   const BRAND_MENUS = useBrandMenus();
   const { count } = useBasket();
@@ -117,6 +131,7 @@ export function Header() {
             </nav>
 
             <div className="ml-auto flex items-center gap-1 lg:ml-0">
+              <SiteSwitch />
               <button
                 type="button"
                 onClick={() => setPanel(panel === 'search' ? null : 'search')}
@@ -200,7 +215,8 @@ export function Header() {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-5 py-5">
-            <form onSubmit={submit} role="search">
+            <SiteSwitch full />
+            <form onSubmit={submit} role="search" className="mt-4">
               <label className="flex h-12 items-center gap-3 rounded-full border border-line bg-cream-2 px-4 focus-within:border-ink focus-within:bg-white">
                 <Search size={18} className="text-ink-3" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search phones" className="h-full flex-1 bg-transparent text-sm outline-none" />
