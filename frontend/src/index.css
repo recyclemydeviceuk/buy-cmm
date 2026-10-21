@@ -31,3 +31,50 @@
   .text-balance { text-wrap: balance; }
   .mask-fade-x { -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 }
+
+/* Cross-site link (Sell a phone): animated gradient border, shimmering label, soft glow. */
+@property --cross-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.cross-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  font-weight: 700;
+  color: #dc2626;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    conic-gradient(from var(--cross-angle), #dc2626, #f97316, #ec4899, #8b5cf6, #dc2626) border-box;
+  animation: cross-spin 3s linear infinite, cross-glow 2.4s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+.cross-link:hover {
+  transform: translateY(-1px);
+  background:
+    linear-gradient(#fff7f7, #fff7f7) padding-box,
+    conic-gradient(from var(--cross-angle), #dc2626, #f97316, #ec4899, #8b5cf6, #dc2626) border-box;
+}
+.cross-link svg { transition: transform 0.2s; }
+.cross-link:hover svg { transform: translate(2px, -2px); }
+.cross-link-text {
+  background: linear-gradient(90deg, #dc2626, #f97316, #ec4899, #dc2626);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cross-shimmer 4s linear infinite;
+}
+@keyframes cross-spin { to { --cross-angle: 360deg; } }
+@keyframes cross-shimmer { to { background-position: 300% 0; } }
+@keyframes cross-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0), 0 2px 10px rgba(236, 72, 153, 0.15); }
+  50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08), 0 4px 18px rgba(236, 72, 153, 0.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cross-link, .cross-link-text { animation: none; }
+}
