@@ -125,6 +125,9 @@ export function Header() {
                 Buy a phone
                 <ChevronDown size={15} className={cn('transition-transform duration-300', panel === 'menu' && 'rotate-180')} />
               </button>
+              <a href="https://cashmymobile.co.uk/" onMouseEnter={scheduleClose} className={navItem}>
+                Sell a phone
+              </a>
               <NavLink to="/how-it-works" onMouseEnter={scheduleClose} className={({ isActive }) => cn(navItem, isActive && 'text-ink')}>
                 How it works
               </NavLink>
@@ -254,6 +257,9 @@ export function Header() {
                   <Link key={l.label} to={l.to} className="pill h-9 py-0 text-[13px]">{l.label}</Link>
                 ))}
               </div>
+              <a href="https://cashmymobile.co.uk/" className="flex items-center justify-between border-t border-line py-4 font-display text-lg font-bold">
+                Sell a phone <ArrowUpRight size={18} />
+              </a>
               <Link to="/how-it-works" className="flex items-center justify-between border-t border-line py-4 font-display text-lg font-bold">
                 How it works <ArrowUpRight size={18} />
               </Link>
