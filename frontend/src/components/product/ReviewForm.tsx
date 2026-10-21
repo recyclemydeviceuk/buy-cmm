@@ -6,10 +6,10 @@ import { Field, TextArea } from '../ui/Field';
 import { cn } from '../../lib/cn';
 
 /** Posts a review to the backend; it appears on the page once approved in the admin. */
-export function ReviewForm({ productId, productName }: { productId: string; productName: string }) {
-  const [open, setOpen] = useState(false);
+export function ReviewForm({ productId, productName, initialOpen = false, initialOrder = '' }: { productId: string; productName: string; initialOpen?: boolean; initialOrder?: string }) {
+  const [open, setOpen] = useState(initialOpen);
   const [rating, setRating] = useState(5);
-  const [form, setForm] = useState({ author: '', email: '', orderNumber: '', title: '', body: '' });
+  const [form, setForm] = useState({ author: '', email: '', orderNumber: initialOrder, title: '', body: '' });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);

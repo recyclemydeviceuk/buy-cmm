@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ShieldCheck, Truck, RefreshCcw, Check, ShoppingBag, Lock, Cpu, Sparkles, Cable, Database, BadgeCheck, ArrowDown } from 'lucide-react';
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
@@ -33,6 +33,10 @@ function storageHint(s: string) {
 
 export default function ProductPage() {
   const { slug = '' } = useParams();
+  // Links in our review emails open the form with the order number filled in (?review=1&order=…).
+  const [params] = useSearchParams();
+  const reviewInvite = params.get('review') === '1';
+  const reviewOrder = (params.get('order') ?? '').toUpperCase().slice(0, 20);
   const product = useAsync(() => api.getProduct(slug), [slug]);
   const related = useAsync(() => api.getRelated(slug), [slug]);
   const reviews = useAsync(() => (product.data ? api.getReviews(product.data.id) : Promise.resolve([])), [product.data?.id]);
@@ -74,6 +78,12 @@ export default function ProductPage() {
   const colourStep = useRef<HTMLElement>(null);
   const heroCta = useRef<HTMLDivElement>(null);
   const [heroCtaVisible, setHeroCtaVisible] = useState(true);
+
+  useEffect(() => {
+    if (!p || !reviewInvite) return;
+    const t = window.setTimeout(() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    return () => window.clearTimeout(t);
+  }, [p, reviewInvite]);
 
   useEffect(() => {
     if (!p) return;
@@ -223,7 +233,7 @@ export default function ProductPage() {
             <p className="eyebrow">{p.brand} · {p.releaseYear} · Unlocked</p>
             <h1 className="mt-1.5 text-3xl md:text-[2.6rem] md:leading-[1.04]">{p.name}</h1>
             <a href="#reviews" className="mt-2 inline-flex items-center gap-1.5 text-sm">
-              {p.reviewCount > 0 ? <><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3 underline-offset-4 hover:underline">({p.reviewCount.toLocaleString('en-GB')} reviews)</span></> : <span className="text-ink-3">No reviews yet</span>}
+              {p.reviewCount > 0 ? <><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3 underline-offset-4 hover:underline">({p.reviewCount.toLocaleString('en-GB')} reviews)</span></> : <span className="inline-flex items-center gap-1.5 text-ink-3"><Sparkles size={14} className="text-brand-600" /> Just landed · <span className="font-semibold text-ink underline-offset-4 hover:underline">be the first to review</span></span>}
             </a>
 
             {/* Current configuration: each chip jumps to its step */}
@@ -491,9 +501,12 @@ export default function ProductPage() {
                     <p className="mt-2 text-sm text-ink-3">{p.reviewCount.toLocaleString('en-GB')} reviews</p>
                   </>
                 ) : (
-                  <p className="text-sm text-ink-3">No reviews for this model yet. Bought one? Be the first.</p>
+                  <>
+                    <p className="font-display text-xl font-bold">Fresh in stock</p>
+                    <p className="mt-1 text-sm text-ink-3">This {p.name} hasn’t been reviewed yet. Bought one from us? Your review helps the next buyer pick the right grade.</p>
+                  </>
                 )}
-                <div className="mt-5"><ReviewForm productId={p.id} productName={p.name} /></div>
+                <div className="mt-5"><ReviewForm key={reviewOrder} productId={p.id} productName={p.name} initialOpen={reviewInvite} initialOrder={reviewOrder} /></div>
               </div>
             </div>
             <ul className="space-y-3">
@@ -508,7 +521,27 @@ export default function ProductPage() {
                   {r.reply && <p className="mt-3 rounded-2xl bg-cream px-4 py-3 text-sm text-ink-2"><span className="block text-[11px] font-bold uppercase tracking-wider text-ink-3">Reply from CashMyMobile</span>{r.reply}</p>}
                 </li>
               ))}
-              {reviewList.length === 0 && <li className="rounded-[24px] border border-dashed border-line p-8 text-center text-sm text-ink-3">Reviews from verified buyers appear here.</li>}
+              {reviewList.length === 0 && (
+                <li className="rounded-[24px] border border-line p-6 md:p-8">
+                  <p className="font-display text-lg font-bold">Every review here comes from a real customer</p>
+                  <p className="mt-1 text-sm text-ink-3">We email buyers a few days after delivery and check every review before it’s published. Until then, here’s what every {p.name} comes with:</p>
+                  <ul className="mt-5 grid gap-2.5 sm:grid-cols-3">
+                    {[
+                      [ShieldCheck, '12-month warranty', 'Repair or replace'],
+                      [RefreshCcw, '30-day returns', 'Full refund, any reason'],
+                      [BadgeCheck, 'Verified reviews', 'Buyers only, checked by us'],
+                    ].map(([Icon, t, sub]) => {
+                      const I = Icon as typeof ShieldCheck;
+                      return (
+                        <li key={String(t)} className="flex items-center gap-3 rounded-2xl bg-cream-2 px-4 py-3 text-sm">
+                          <I size={17} className="shrink-0" />
+                          <span><span className="block font-bold">{String(t)}</span><span className="text-xs text-ink-3">{String(sub)}</span></span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              )}
             </ul>
           </div>
         </section>
