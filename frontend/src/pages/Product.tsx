@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, ShieldCheck, Truck, RefreshCcw, Check, ShoppingBag } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Truck, RefreshCcw, Check, ShoppingBag, Lock, Cpu, Sparkles, Cable, Database, BadgeCheck, ArrowDown } from 'lucide-react';
 import { api } from '../api';
 import { useAsync } from '../hooks/useAsync';
 import { useSeo, breadcrumbLd, SITE_URL } from '../lib/seo';
 import { useBasket } from '../store/basket';
 import { useGradePhotos } from '../store/catalog';
-import { VariantPicker, settle, type Selection } from '../components/product/VariantPicker';
+import { settle, type Selection } from '../components/product/VariantPicker';
+import { OptionRow, StepSection, bestValue, optionPricer } from '../components/product/Configurator';
 import { GradeExample } from '../components/product/GradeExample';
 import { ProductRail } from '../components/product/ProductRail';
 import { Button } from '../components/ui/Button';
@@ -16,11 +17,19 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { Section, SectionHeading } from '../components/ui/Section';
 import { ReviewForm } from '../components/product/ReviewForm';
 import { Accordion } from '../components/ui/Accordion';
-import { CONDITIONS, money, savingsPct } from '../lib/format';
+import { CONDITIONS, CONDITION_ORDER, money, savingsPct } from '../lib/format';
 import { cn } from '../lib/cn';
 import NotFound from './NotFound';
 
-type Tab = 'specs' | 'box' | 'reviews';
+/** How each storage size tends to be used; a guide, not a promise. */
+function storageHint(s: string) {
+  const gb = s.endsWith('TB') ? parseInt(s) * 1024 : parseInt(s);
+  if (gb <= 64) return 'Messages, maps and a light photo library';
+  if (gb <= 128) return 'Everyday use: apps, photos and some video';
+  if (gb <= 256) return 'Room to spare for photos, 4K video and games';
+  if (gb <= 512) return 'Big photo libraries and lots of 4K video';
+  return 'Pro-level space for creators and offline libraries';
+}
 
 export default function ProductPage() {
   const { slug = '' } = useParams();
@@ -58,9 +67,13 @@ export default function ProductPage() {
   });
 
   const [selection, setSelection] = useState<Selection>({ storage: '', colour: '', condition: 'excellent' });
-  const [tab, setTab] = useState<Tab>('specs');
-  /** The gallery shows the phone, or an example of the grade once the shopper picks one. */
+  /** The gallery shows the phone, or an example of the grade. */
   const [view, setView] = useState<'phone' | 'grade'>('phone');
+  /** Briefly rings the colour step when someone tries to add without choosing one. */
+  const [nudgeColour, setNudgeColour] = useState(false);
+  const colourStep = useRef<HTMLElement>(null);
+  const heroCta = useRef<HTMLDivElement>(null);
+  const [heroCtaVisible, setHeroCtaVisible] = useState(true);
 
   useEffect(() => {
     if (!p) return;
@@ -68,9 +81,17 @@ export default function ProductPage() {
     const best = first.find((v) => v.condition === 'excellent') ?? first.find((v) => v.condition === 'good') ?? first[0] ?? p.variants[0];
     // Phones with colour options start without one picked: the shopper has to choose before adding to the basket.
     if (best) setSelection({ storage: best.storage, colour: p.colours.length ? '' : best.colour, condition: best.condition });
-    setTab('specs');
     setView('phone');
   }, [p]);
+
+  // The mobile buy bar appears once the main button has scrolled away.
+  useEffect(() => {
+    const el = heroCta.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setHeroCtaVisible(e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [p?.id]);
 
   const variant = useMemo(() => p?.variants.find((v) => v.storage === selection.storage && v.colour === selection.colour && v.condition === selection.condition), [p, selection]);
   const needsColour = !!p && p.colours.length > 0 && selection.colour === '';
@@ -85,8 +106,8 @@ export default function ProductPage() {
   if (product.loading) {
     return (
       <div className="container grid gap-10 py-10 lg:grid-cols-12">
-        <Skeleton className="aspect-square rounded-[32px] lg:col-span-6" />
-        <div className="space-y-4 lg:col-span-6">
+        <Skeleton className="aspect-square rounded-[32px] lg:col-span-7" />
+        <div className="space-y-4 lg:col-span-5">
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-5 w-1/3" />
           <Skeleton className="h-10 w-1/2" />
@@ -97,7 +118,42 @@ export default function ProductPage() {
   }
   if (!p) return <NotFound />;
 
-  const save = variant ? savingsPct(variant.price, p.rrp) : 0;
+  const soldOut = inStock.length === 0;
+  const price = available ? variant!.price : fromPrice;
+  const save = price ? savingsPct(price, p.rrp) : 0;
+  const colour = p.colours.find((c) => c.name === selection.colour);
+  const image = colour?.image || p.image;
+  const photos = gradePhotos[selection.condition] ?? [];
+  const showGrade = view === 'grade' && photos.length > 0;
+  const grade = CONDITIONS[selection.condition];
+  const priceOf = optionPricer(p, selection);
+  const conditionPrices = CONDITION_ORDER.map((c) => [c, priceOf('condition', c)] as [string, ReturnType<typeof priceOf>]);
+  const storagePrices = p.storages.map((s) => [s, priceOf('storage', s)] as [string, ReturnType<typeof priceOf>]);
+  const colourPrices = p.colours.map((c) => [c.name, priceOf('colour', c.name)] as [string, ReturnType<typeof priceOf>]);
+  const cheapestCondition = bestValue(conditionPrices);
+  const cheapestStorage = bestValue(storagePrices);
+  const reviewList = reviews.data ?? [];
+
+  const choose = (next: Selection, changed: keyof Selection) => {
+    setSelection(settle(p.variants, next, changed));
+    setView(changed === 'condition' && (gradePhotos[next.condition] ?? []).length ? 'grade' : 'phone');
+  };
+  const pick = (option: keyof Selection, value: string) => choose({ ...selection, [option]: value } as Selection, option);
+
+  function addToBasket() {
+    if (needsColour) {
+      colourStep.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setNudgeColour(true);
+      window.setTimeout(() => setNudgeColour(false), 1800);
+      return;
+    }
+    if (variant && available) add(p!, variant);
+  }
+
+  const ctaLabel = soldOut ? 'Sold out' : needsColour ? 'Choose your colour' : available ? `Add to basket · ${money(variant!.price)}` : 'Sold out in this configuration';
+  const ctaDisabled = soldOut || (!needsColour && !available);
+  const priceText = available ? money(variant!.price) : needsColour && fromPrice !== null ? `From ${money(fromPrice)}` : soldOut ? 'Sold out' : '—';
+
   const specs: Array<[string, string]> = [
     ['Display', p.specs.display],
     ['Chip', p.specs.chip],
@@ -109,18 +165,11 @@ export default function ProductPage() {
     ['Network', 'Unlocked'],
     ['Released', String(p.releaseYear)],
   ];
-  const tabs: Array<[Tab, string]> = [['specs', 'Specifications'], ['box', 'Good to know'], ['reviews', `Reviews (${(reviews.data ?? []).length})`]];
-  const soldOut = inStock.length === 0;
-  const colourPhoto = p.colours.find((c) => c.name === selection.colour)?.image;
-  const image = colourPhoto || p.image;
-  // Photos are transparent cut-outs and sit on the page itself, with no tinted panel behind them.
-  const tint = '';
-  const photos = gradePhotos[selection.condition] ?? [];
-  const showGrade = view === 'grade' && photos.length > 0;
-  const choose = (next: Selection, changed: keyof Selection) => {
-    setSelection(settle(p.variants, next, changed));
-    setView(changed === 'condition' ? 'grade' : 'phone');
-  };
+  const summaryChips: Array<[string, string, string]> = [
+    ['condition', `${grade.grade} · ${grade.label}`, '#step-condition'],
+    ['storage', selection.storage || 'Storage', '#step-storage'],
+    ...(p.colours.length ? [['colour', selection.colour || 'Choose colour', '#step-colour'] as [string, string, string]] : []),
+  ];
 
   return (
     <>
@@ -134,136 +183,335 @@ export default function ProductPage() {
         </nav>
       </div>
 
+      {/* ── Hero: gallery + summary ─────────────────────────────────────────── */}
       <div className="container grid gap-8 py-6 lg:grid-cols-12 lg:gap-12 lg:py-8">
-        {/* Gallery */}
-        <div className="lg:col-span-6">
-          <div className="sticky top-28">
+        <div className="lg:col-span-7">
+          <div className="lg:sticky lg:top-28">
             {showGrade ? (
-              <GradeExample key={selection.condition} condition={selection.condition} photos={photos} className="aspect-square animate-pop" />
+              <GradeExample key={selection.condition} condition={selection.condition} photos={photos} className="aspect-square animate-pop md:aspect-[5/4]" />
             ) : (
-              <div className={cn('relative overflow-hidden rounded-[32px] p-8 md:p-12', tint)}>
-                <div className="absolute left-5 top-5 flex gap-2">
-                  {save > 0 && available && <Badge tone="dark">Save {save}%</Badge>}
+              <div className="relative overflow-hidden rounded-[32px] border border-line p-6 md:p-12">
+                <div className="absolute left-5 top-5 z-10 flex flex-wrap gap-2">
+                  {save > 0 && !soldOut && <Badge tone="dark">Save {save}%</Badge>}
                   {p.releaseYear >= 2026 && <Badge tone="brand">New in</Badge>}
                 </div>
-                <img key={image} src={image} alt={[p.brand, p.name, selection.colour].filter(Boolean).join(' ')} className="mx-auto aspect-square w-full max-w-sm animate-pop product-img" loading="eager" />
-                <ul className="mt-2 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-xs font-semibold text-ink-2">
-                  {['40-point tested', 'Data wiped', 'Blocklist checked', 'Cable included'].map((t) => (
-                    <li key={t} className="flex items-center gap-1.5"><Check size={13} className="text-success" strokeWidth={3} /> {t}</li>
-                  ))}
-                </ul>
+                <img key={image} src={image} alt={[p.brand, p.name, selection.colour].filter(Boolean).join(' ')} className="mx-auto aspect-square w-full max-w-md animate-pop product-img" loading="eager" />
               </div>
             )}
-            {photos.length > 0 && (
-              <div className="mt-3 flex items-center gap-2" role="tablist" aria-label="Photos">
-                {([['phone', image, 'The phone'], ['grade', photos[0].url, `${CONDITIONS[selection.condition].label} example`]] as const).map(([key, src, label]) => (
-                  <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => setView(key)} className={cn('flex items-center gap-2.5 rounded-2xl border p-1.5 pr-4 text-left text-xs font-semibold transition-colors focus-ring', view === key ? 'border-ink text-ink' : 'border-line text-ink-3 hover:border-ink')}>
-                    <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl', key === 'phone' ? tint : 'bg-ink')}>
-                      <img src={src} alt="" className={key === 'phone' ? 'h-9 w-9 product-img' : 'h-full w-full object-cover'} />
-                    </span>
-                    {label}
-                  </button>
+            <div className="mt-3 flex flex-wrap items-center gap-2" role="tablist" aria-label="Photos">
+              <button type="button" role="tab" aria-selected={view === 'phone'} onClick={() => setView('phone')} className={cn('flex items-center gap-2.5 rounded-2xl border p-1.5 pr-4 text-left text-xs font-semibold transition-colors focus-ring', view === 'phone' ? 'border-ink text-ink' : 'border-line text-ink-3 hover:border-ink')}>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"><img src={image} alt="" className="h-10 w-10 product-img" /></span>
+                The phone
+              </button>
+              {photos.length > 0 && (
+                <button type="button" role="tab" aria-selected={view === 'grade'} onClick={() => setView('grade')} className={cn('flex items-center gap-2.5 rounded-2xl border p-1.5 pr-4 text-left text-xs font-semibold transition-colors focus-ring', view === 'grade' ? 'border-ink text-ink' : 'border-line text-ink-3 hover:border-ink')}>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ink"><img src={photos[0].url} alt="" className="h-full w-full object-cover" /></span>
+                  {grade.label} example
+                </button>
+              )}
+              <ul className="ml-auto hidden flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-ink-2 md:flex">
+                {['40-point tested', 'Data wiped', 'Unlocked'].map((t) => (
+                  <li key={t} className="flex items-center gap-1.5"><Check size={13} className="text-success" strokeWidth={3} /> {t}</li>
                 ))}
-              </div>
-            )}
+              </ul>
+            </div>
           </div>
         </div>
 
-        {/* Buy panel */}
-        <div className="lg:col-span-6">
-          <p className="eyebrow">{p.brand} · {p.releaseYear}</p>
-          <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h1 className="text-3xl md:text-[2.4rem] md:leading-[1.05]">{p.name}</h1>
-            <span className="flex items-center gap-1.5 text-sm">{p.reviewCount > 0 ? <><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3">({p.reviewCount.toLocaleString('en-GB')})</span></> : <span className="text-ink-3">No reviews yet</span>}</span>
+        <aside className="lg:col-span-5">
+          <div className="lg:sticky lg:top-28">
+            <p className="eyebrow">{p.brand} · {p.releaseYear} · Unlocked</p>
+            <h1 className="mt-1.5 text-3xl md:text-[2.6rem] md:leading-[1.04]">{p.name}</h1>
+            <a href="#reviews" className="mt-2 inline-flex items-center gap-1.5 text-sm">
+              {p.reviewCount > 0 ? <><Stars value={p.rating} size={13} /> <span className="font-semibold">{p.rating.toFixed(1)}</span><span className="text-ink-3 underline-offset-4 hover:underline">({p.reviewCount.toLocaleString('en-GB')} reviews)</span></> : <span className="text-ink-3">No reviews yet</span>}
+            </a>
+
+            {/* Current configuration: each chip jumps to its step */}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {summaryChips.map(([key, label, href]) => (
+                <a key={key} href={href} className={cn('inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors hover:border-ink', key === 'colour' && needsColour ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-line bg-white text-ink')}>
+                  {key === 'colour' && colour && <span className="h-3.5 w-3.5 rounded-full border border-ink/15" style={{ backgroundColor: colour.hex }} aria-hidden />}
+                  {label}
+                </a>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-[28px] border border-line bg-white p-5 shadow-card md:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+                <div>
+                  <p className="font-display text-[2.6rem] font-bold leading-none tracking-tightest">{priceText}</p>
+                  {price !== null && p.rrp > price && !soldOut && <p className="mt-1.5 text-sm text-ink-3"><span className="line-through">{money(p.rrp)}</span> new</p>}
+                </div>
+                {price !== null && p.rrp > price && !soldOut && (
+                  <span className="rounded-full bg-tint-mint px-3 py-1.5 text-xs font-bold text-success">{money(p.rrp - price)} less than new</span>
+                )}
+              </div>
+              <p className="mt-3 text-xs text-ink-3">{soldOut ? 'Back in stock soon' : <>Includes VAT · Free next-day delivery{available && variant!.stock <= 2 && <span className="font-semibold text-brand-600"> · Only {variant!.stock} left</span>}</>}</p>
+              <div ref={heroCta}>
+                <Button size="lg" disabled={ctaDisabled} onClick={addToBasket} className="mt-5 w-full">
+                  {needsColour && !soldOut ? <ArrowDown size={18} /> : <ShoppingBag size={18} />}
+                  {ctaLabel}
+                </Button>
+              </div>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-3"><Lock size={11} /> Secure checkout with PayPal</p>
+            </div>
+
+            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-[24px] bg-cream-2 text-sm">
+              {[
+                [Truck, 'Free next-day delivery', 'Order by 3pm, tracked and signed for'],
+                [ShieldCheck, '12-month warranty', 'Any fault: we collect, repair or replace'],
+                [RefreshCcw, '30-day returns', 'Changed your mind? Full refund'],
+              ].map(([Icon, t, sub]) => {
+                const I = Icon as typeof Truck;
+                return (
+                  <li key={String(t)} className="flex items-center gap-3.5 px-5 py-3.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white"><I size={16} /></span>
+                    <span><span className="block font-bold">{String(t)}</span><span className="text-xs text-ink-3">{String(sub)}</span></span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
+        </aside>
+      </div>
 
-          <div className="mt-4 flex flex-wrap items-baseline gap-x-3 border-y border-line py-4">
-            <span className="font-display text-4xl font-bold tracking-tightest">{available ? money(variant!.price) : needsColour && fromPrice !== null ? <>From {money(fromPrice)}</> : soldOut ? 'Sold out' : '—'}</span>
-            {available && p.rrp > variant!.price && <span className="text-sm text-ink-3"><span className="line-through">{money(p.rrp)}</span> new</span>}
-            <span className="ml-auto text-xs text-ink-3">{soldOut ? 'Back in stock soon' : <>Includes VAT · Free next-day delivery{available && variant!.stock <= 2 && <span className="font-semibold text-brand-600"> · Only {variant!.stock} left</span>}</>}</span>
-          </div>
+      {/* ── Configure ───────────────────────────────────────────────────────── */}
+      <div className="container">
+        <div className="pb-2 pt-8 md:pt-12">
+          <p className="eyebrow text-brand-600">Make it yours</p>
+          <h2 className="mt-2 max-w-xl text-3xl md:text-[2.6rem] md:leading-[1.05]">Build your {p.name} <span className="serif-accent text-ink-3">in three steps.</span></h2>
+        </div>
 
-          <div className="mt-6">
-            <VariantPicker product={p} selection={selection} onChange={choose} />
-          </div>
+        <StepSection
+          id="step-condition"
+          n={1}
+          title="Choose the condition"
+          sub="Every grade is fully tested, works perfectly and has the same 12-month warranty. The difference is cosmetic."
+          aside={<Link to="/how-it-works#grades" className="text-xs font-semibold text-ink-3 underline underline-offset-4 hover:text-ink">How we grade</Link>}
+          visual={
+            photos.length ? (
+              <GradeExample key={`step-${selection.condition}`} condition={selection.condition} photos={photos} className="aspect-[4/3] animate-pop" />
+            ) : (
+              <div className="relative overflow-hidden rounded-[32px] border border-line p-8">
+                <img src={image} alt="" className="mx-auto aspect-[4/3] w-full max-w-sm object-contain product-img" />
+                <ul className="mt-4 flex flex-wrap justify-center gap-2">
+                  {grade.facts.map(([k, v]) => (
+                    <li key={k} className="rounded-full bg-cream px-3 py-1.5 text-xs font-semibold"><span className="text-ink-3">{k}</span> {v}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+        >
+          {conditionPrices.map(([c, pr]) => {
+            const g = CONDITIONS[c as keyof typeof CONDITIONS];
+            return (
+              <OptionRow
+                key={c}
+                selected={selection.condition === c}
+                disabled={pr.soldOut}
+                onClick={() => pick('condition', c)}
+                leading={<span className={cn('flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl px-2 font-display text-sm font-bold', selection.condition === c ? 'bg-ink text-white' : 'bg-cream text-ink-2')}>{g.grade}</span>}
+                title={g.label}
+                sub={g.short + (g.facts.find(([k]) => k === 'Battery') ? ` · battery ${g.facts.find(([k]) => k === 'Battery')![1]}` : '')}
+                price={pr}
+                tag={c === cheapestCondition ? { label: 'Best price', tone: 'mint' } : c === 'excellent' && !pr.soldOut ? { label: 'Most chosen', tone: 'lilac' } : undefined}
+              />
+            );
+          })}
+        </StepSection>
 
-          <p className="mt-4 text-xs text-ink-3"><span className="font-semibold text-ink">{CONDITIONS[selection.condition].label}:</span> {CONDITIONS[selection.condition].blurb}</p>
+        <StepSection
+          id="step-storage"
+          n={2}
+          flip
+          title="Pick your storage"
+          sub="More space for photos, video and apps. Phones can’t be upgraded later, so pick with room to grow."
+          visual={
+            <div className="relative flex aspect-[4/3] items-center overflow-hidden rounded-[32px] bg-ink p-8 text-white md:p-12">
+              <div className="relative z-10">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Storage</p>
+                <p key={selection.storage} className="mt-2 font-display text-6xl font-bold tracking-tightest animate-pop md:text-8xl">{selection.storage || '—'}</p>
+                <p className="mt-3 max-w-[16rem] text-sm text-white/60">{selection.storage ? storageHint(selection.storage) : 'Choose a size'}</p>
+              </div>
+              <img src={image} alt="" className="absolute -bottom-6 -right-6 h-[85%] w-auto rotate-[8deg] object-contain opacity-95 product-img" />
+              <Database size={180} className="absolute -left-10 -top-10 text-white/[.04]" aria-hidden />
+            </div>
+          }
+        >
+          {storagePrices.map(([s, pr]) => (
+            <OptionRow
+              key={s}
+              selected={selection.storage === s}
+              disabled={pr.soldOut}
+              onClick={() => pick('storage', s)}
+              leading={<span className={cn('flex h-9 min-w-[3.25rem] shrink-0 items-center justify-center rounded-xl px-2 text-xs font-bold', selection.storage === s ? 'bg-ink text-white' : 'bg-cream text-ink-2')}><Cpu size={13} className="mr-1" />{s.replace('GB', '')}</span>}
+              title={s}
+              sub={storageHint(s)}
+              price={pr}
+              tag={s === cheapestStorage ? { label: 'Best price', tone: 'mint' } : undefined}
+            />
+          ))}
+        </StepSection>
 
-          <Button size="lg" disabled={!available || needsColour} onClick={() => variant && !needsColour && add(p, variant)} className="mt-5 w-full">
-            <ShoppingBag size={18} />
-            {needsColour && !soldOut ? 'Choose a colour to add to basket' : available ? `Add to basket · ${money(variant!.price)}` : soldOut ? 'Sold out' : 'Sold out in this configuration'}
-          </Button>
-
-          <ul className="mt-5 grid grid-cols-3 gap-2 text-[11px] leading-tight text-ink-2">
-            {[
-              [Truck, 'Next-day delivery', 'Free, order by 3pm'],
-              [ShieldCheck, '12-month warranty', 'Repair or replace'],
-              [RefreshCcw, '30-day returns', 'Full refund'],
-            ].map(([Icon, t, sub]) => {
-              const I = Icon as typeof Truck;
+        {p.colours.length > 0 && (
+          <StepSection
+            ref={colourStep}
+            id="step-colour"
+            n={3}
+            highlight={nudgeColour}
+            title="Choose your colour"
+            sub={needsColour ? <span className="font-semibold text-brand-600">Pick a colour to add this phone to your basket.</span> : 'The official finishes this model was made in.'}
+            visual={
+              <div className="relative overflow-hidden rounded-[32px] border border-line p-8 md:p-10">
+                <img key={image} src={image} alt={colour ? `${p.name} in ${colour.name}` : p.name} className="mx-auto aspect-[4/3] w-full max-w-sm object-contain animate-pop product-img" />
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                  {p.colours.map((c) => {
+                    const pr = colourPrices.find(([n]) => n === c.name)![1];
+                    return (
+                      <button key={c.name} type="button" disabled={pr.soldOut} onClick={() => pick('colour', c.name)} aria-label={c.name} title={c.name} className={cn('h-8 w-8 rounded-full border border-ink/15 ring-offset-2 transition-transform hover:scale-110 focus-ring disabled:opacity-30 disabled:hover:scale-100', selection.colour === c.name && 'ring-2 ring-ink')} style={{ backgroundColor: c.hex }} />
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-center text-sm font-semibold">{colour ? colour.name : <span className="text-ink-3">No colour chosen yet</span>}</p>
+              </div>
+            }
+          >
+            {colourPrices.map(([name, pr]) => {
+              const c = p.colours.find((x) => x.name === name)!;
               return (
-                <li key={String(t)} className="flex items-center gap-2 rounded-xl border border-line px-3 py-2">
-                  <I size={15} className="shrink-0 text-ink" />
-                  <span><span className="block font-bold text-ink">{String(t)}</span>{String(sub)}</span>
+                <OptionRow
+                  key={name}
+                  selected={selection.colour === name}
+                  disabled={pr.soldOut}
+                  onClick={() => pick('colour', name)}
+                  leading={<span className="h-9 w-9 shrink-0 rounded-full border border-ink/15 shadow-inner" style={{ backgroundColor: c.hex }} aria-hidden />}
+                  title={name}
+                  sub={pr.soldOut ? 'Not in stock right now' : pr.value !== null && selection.colour !== name ? 'In stock' : undefined}
+                  price={pr}
+                />
+              );
+            })}
+          </StepSection>
+        )}
+
+        {/* ── Review your phone ── */}
+        <section className="border-t border-line py-12 md:py-16">
+          <div className="grid items-center gap-8 overflow-hidden rounded-[36px] bg-ink p-6 text-white md:grid-cols-[1fr_1.2fr] md:p-12">
+            <img src={image} alt="" className="mx-auto aspect-square w-full max-w-[18rem] object-contain product-img" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Your phone</p>
+              <h2 className="mt-2 text-3xl text-white md:text-4xl">{p.brand} {p.name}</h2>
+              <dl className="mt-6 divide-y divide-white/10 border-y border-white/10 text-sm">
+                {[
+                  ['Condition', `${grade.label} (${grade.grade})`, '#step-condition'],
+                  ['Storage', selection.storage, '#step-storage'],
+                  ...(p.colours.length ? [['Colour', selection.colour || 'Not chosen yet', '#step-colour']] : []),
+                  ['Network', 'Unlocked, any UK SIM', ''],
+                ].map(([k, v, href]) => (
+                  <div key={k} className="flex items-center justify-between gap-4 py-3">
+                    <dt className="text-white/50">{k}</dt>
+                    <dd className={cn('font-semibold', k === 'Colour' && needsColour && 'text-brand-200')}>{href ? <a href={href} className="underline-offset-4 hover:underline">{v}</a> : v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <p className="font-display text-4xl font-bold tracking-tightest">{priceText}</p>
+                <Button size="lg" variant="light" disabled={ctaDisabled} onClick={addToBasket} className="min-w-[14rem] flex-1 sm:flex-none">
+                  {needsColour && !soldOut ? <ArrowDown size={18} /> : <ShoppingBag size={18} />}
+                  {needsColour && !soldOut ? 'Choose your colour' : available ? 'Add to basket' : ctaLabel}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Included with every phone ── */}
+        <section className="border-t border-line py-12 md:py-16">
+          <SectionHeading eyebrow="Every phone, every time" title="What you get" />
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              [BadgeCheck, '40-point tested', 'Screen, cameras, battery, speakers, sensors and ports checked by hand.', 'bg-tint-mint'],
+              [Sparkles, 'Cleaned and data-wiped', 'Professionally cleaned and certified data erasure before it ships.', 'bg-tint-sky'],
+              [Lock, 'Blocklist checked', 'Not lost, stolen or financed. Unlocked to work on any UK network.', 'bg-tint-lilac'],
+              [Cable, 'Charging cable included', 'Plus a SIM tool, in protective packaging. Premium comes boxed.', 'bg-tint-peach'],
+            ].map(([Icon, t, sub, tone]) => {
+              const I = Icon as typeof Lock;
+              return (
+                <li key={String(t)} className={cn('rounded-[24px] p-6', String(tone))}>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white"><I size={20} /></span>
+                  <p className="mt-4 font-display text-lg font-bold">{String(t)}</p>
+                  <p className="mt-1 text-sm text-ink-2">{String(sub)}</p>
                 </li>
               );
             })}
           </ul>
+        </section>
 
-          {/* Tabs */}
-          <div className="mt-10">
-            <div className="flex gap-6 border-b border-line" role="tablist">
-              {tabs.map(([key, label]) => (
-                <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={cn('-mb-px border-b-2 pb-3 text-sm font-semibold transition-colors', tab === key ? 'border-ink text-ink' : 'border-transparent text-ink-3 hover:text-ink')}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="pt-5">
-              {tab === 'specs' && (
-                <dl className="grid gap-x-8 sm:grid-cols-2">
-                  {specs.map(([k, v]) => (
-                    <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line-2 py-2.5 text-sm">
-                      <dt className="text-ink-3">{k}</dt>
-                      <dd className="text-right font-semibold">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
-              {tab === 'box' && (
-                <Accordion
-                  variant="plain"
-                  defaultOpen={0}
-                  items={[
-                    { q: 'What comes with the phone?', a: 'The phone, a USB charging cable and a SIM tool, in plain protective packaging. Premium phones come in their box. We don’t include a plug or earphones; most people already have them and it keeps the price and packaging down.' },
-                    { q: `Is this ${p.name} unlocked?`, a: `Yes. Every ${p.name} we sell is unlocked, so it works with a SIM from any UK network.` },
-                    { q: 'How is battery health checked?', a: `Every ${p.name} is checked with the manufacturer’s own diagnostics. Premium and Excellent phones have 90%+ battery health, Good 85%+, Fair 80%+. If a battery is below the threshold we replace it before sale.` },
-                    { q: 'What does the warranty cover?', a: 'Any hardware fault that isn’t accidental damage for 12 months: battery, screen, buttons, cameras, speakers, charging port. We collect, repair or replace, and return it for free.' },
-                  ]}
-                />
-              )}
-              {tab === 'reviews' && (
-                <div>
-                  <ul className="divide-y divide-line-2">
-                    {(reviews.data ?? []).map((r) => (
-                      <li key={r.id} className="py-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-sm font-bold">{r.title}</p>
-                          <Stars value={r.rating} size={12} />
-                        </div>
-                        <p className="mt-1 text-sm text-ink-3">{r.body}</p>
-                        <p className="mt-1.5 text-xs text-ink-2"><span className="font-semibold">{r.author}</span> · {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{r.verified && <> · <span className="text-success">Verified purchase</span></>}</p>
-                        {r.reply && <p className="mt-2 rounded-2xl bg-cream px-4 py-3 text-sm text-ink-2"><span className="block text-[11px] font-bold uppercase tracking-wider text-ink-3">Reply from CashMyMobile</span>{r.reply}</p>}
-                      </li>
-                    ))}
-                    {(reviews.data ?? []).length === 0 && <li className="py-6 text-sm text-ink-3">No reviews for this model yet. Bought one? Be the first.</li>}
-                  </ul>
-                  <div className="mt-4"><ReviewForm productId={p.id} productName={p.name} /></div>
+        {/* ── Specs + FAQs ── */}
+        <section className="grid gap-10 border-t border-line py-12 md:py-16 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <SectionHeading eyebrow="Specifications" title={`${p.name} at a glance`} />
+            <dl className="mt-6 rounded-[24px] border border-line px-5">
+              {specs.map(([k, v]) => (
+                <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line-2 py-3 text-sm last:border-b-0">
+                  <dt className="text-ink-3">{k}</dt>
+                  <dd className="text-right font-semibold">{v}</dd>
                 </div>
-              )}
+              ))}
+            </dl>
+          </div>
+          <div>
+            <SectionHeading eyebrow="Good to know" title="Questions, answered" />
+            <div className="mt-6">
+              <Accordion
+                variant="plain"
+                defaultOpen={0}
+                items={[
+                  { q: 'What comes with the phone?', a: 'The phone, a USB charging cable and a SIM tool, in plain protective packaging. Premium phones come in their box. We don’t include a plug or earphones; most people already have them and it keeps the price and packaging down.' },
+                  { q: `Is this ${p.name} unlocked?`, a: `Yes. Every ${p.name} we sell is unlocked, so it works with a SIM from any UK network.` },
+                  { q: 'How is battery health checked?', a: `Every ${p.name} is checked with the manufacturer’s own diagnostics. Premium and Excellent phones have 90%+ battery health, Good 85%+, Fair 80%+. If a battery is below the threshold we replace it before sale.` },
+                  { q: 'What does the warranty cover?', a: 'Any hardware fault that isn’t accidental damage for 12 months: battery, screen, buttons, cameras, speakers, charging port. We collect, repair or replace, and return it for free.' },
+                ]}
+              />
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* ── Reviews ── */}
+        <section id="reviews" className="scroll-mt-28 border-t border-line py-12 md:py-16">
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+            <div>
+              <SectionHeading eyebrow="Reviews" title="What buyers say" />
+              <div className="mt-6 rounded-[28px] bg-cream-2 p-6">
+                {p.reviewCount > 0 ? (
+                  <>
+                    <p className="font-display text-5xl font-bold tracking-tightest">{p.rating.toFixed(1)}<span className="text-2xl text-ink-3">/5</span></p>
+                    <Stars value={p.rating} size={16} />
+                    <p className="mt-2 text-sm text-ink-3">{p.reviewCount.toLocaleString('en-GB')} reviews</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-ink-3">No reviews for this model yet. Bought one? Be the first.</p>
+                )}
+                <div className="mt-5"><ReviewForm productId={p.id} productName={p.name} /></div>
+              </div>
+            </div>
+            <ul className="space-y-3">
+              {reviewList.map((r) => (
+                <li key={r.id} className="rounded-[24px] border border-line p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="font-display font-bold">{r.title}</p>
+                    <Stars value={r.rating} size={12} />
+                  </div>
+                  <p className="mt-2 text-sm text-ink-2">{r.body}</p>
+                  <p className="mt-3 text-xs text-ink-3"><span className="font-semibold text-ink-2">{r.author}</span> · {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{r.verified && <> · <span className="text-success">Verified purchase</span></>}</p>
+                  {r.reply && <p className="mt-3 rounded-2xl bg-cream px-4 py-3 text-sm text-ink-2"><span className="block text-[11px] font-bold uppercase tracking-wider text-ink-3">Reply from CashMyMobile</span>{r.reply}</p>}
+                </li>
+              ))}
+              {reviewList.length === 0 && <li className="rounded-[24px] border border-dashed border-line p-8 text-center text-sm text-ink-3">Reviews from verified buyers appear here.</li>}
+            </ul>
+          </div>
+        </section>
       </div>
 
       {(related.data?.length ?? 0) > 0 && (
@@ -272,6 +520,19 @@ export default function ProductPage() {
           <ProductRail products={related.data ?? []} loading={related.loading} />
         </Section>
       )}
+
+      {/* ── Mobile buy bar ── */}
+      <div className={cn('fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur transition-transform duration-300 lg:hidden', heroCtaVisible ? 'translate-y-full' : 'translate-y-0')}>
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs text-ink-3">{[selection.storage, selection.colour, grade.label].filter(Boolean).join(' · ')}</p>
+            <p className="font-display text-xl font-bold tracking-tighter">{priceText}</p>
+          </div>
+          <Button size="md" disabled={ctaDisabled} onClick={addToBasket}>
+            {needsColour && !soldOut ? 'Choose colour' : available ? 'Add to basket' : 'Sold out'}
+          </Button>
+        </div>
+      </div>
     </>
   );
 }
